@@ -42,7 +42,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         super.onCreate(savedInstanceState);
         binding = ActivityHomeBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        setSupportActionBar(binding.toolbar);
+        //setSupportActionBar(binding.toolbar);
 
         db = FirebaseFirestore.getInstance();
 
