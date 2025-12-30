@@ -1,31 +1,274 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/background">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/products_recycler_view"
+    <!-- Modern AppBar with clean design and premium aesthetics -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:background="@color/white"
+        app:elevation="1dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:paddingHorizontal="@dimen/spacing_lg"
+            app:title="Catalogue"
+            app:titleTextAppearance="@style/TextHeadline2"
+            app:titleTextColor="@color/on_background"
+            app:navigationIcon="@drawable/ic_menu"
+            app:navigationIconTint="@color/on_background"
+            app:menu="@menu/main_menu" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main scrollable content with modern spacing -->
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="4dp" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <TextView
-        android:id="@+id/empty_view_text_products"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No products yet. Add one!"
-        android:layout_gravity="center"
-        android:visibility="gone"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/spacing_3xl">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <!-- Redesigned stats card with modern gradient background and improved visual hierarchy -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/CardElevated"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    app:cardBackgroundColor="@color/primary">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_2xl">
+
+                        <!-- Stats Header -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="@dimen/spacing_xl">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Catalogue Overview"
+                                    android:textColor="@color/white"
+                                    android:alpha="0.9"
+                                    style="@style/TextCaption"
+                                    android:layout_marginBottom="@dimen/spacing_xs" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Your Product Statistics"
+                                    android:textColor="@color/white"
+                                    style="@style/TextHeadline2" />
+                            </LinearLayout>
+
+                            <!-- Decorative accent -->
+                            <View
+                                android:layout_width="60dp"
+                                android:layout_height="60dp"
+                                android:background="@drawable/stats_accent_bg"
+                                android:alpha="0.15" />
+                        </LinearLayout>
+
+                        <!-- Stats Content -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:baselineAligned="false">
+
+                            <!-- Total Products Stat -->
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:paddingEnd="@dimen/spacing_lg">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="24"
+                                    android:textColor="@color/white"
+                                    android:textSize="32sp"
+                                    android:textStyle="bold"
+                                    android:layout_marginBottom="@dimen/spacing_xs" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Total Products"
+                                    android:textColor="@color/white"
+                                    android:alpha="0.85"
+                                    style="@style/TextBody2" />
+                            </LinearLayout>
+
+                            <!-- Divider -->
+                            <View
+                                android:layout_width="1dp"
+                                android:layout_height="50dp"
+                                android:background="@color/white"
+                                android:alpha="0.2"
+                                android:layout_marginHorizontal="@dimen/spacing_lg" />
+
+                            <!-- Preview Button -->
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/button_filter"
+                                style="@style/ButtonSecondary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/spacing_lg"
+                                android:text="Preview"
+                                android:textColor="@color/primary"
+                                app:icon="@drawable/ic_visibility"
+                                app:iconTint="@color/primary"
+                                app:iconGravity="textStart"
+                                app:backgroundTint="@color/white" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- Subtle divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider_light"
+                android:layout_marginHorizontal="@dimen/spacing_lg" />
+
+            <!-- Products section header with modern typography -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Products"
+                    style="@style/TextHeadline2"
+                    android:layout_marginBottom="@dimen/spacing_sm" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manage and organize your product catalogue"
+                    style="@style/TextBody2" />
+            </LinearLayout>
+
+            <!-- Products RecyclerView with modern grid -->
+
+            <!-- Modern empty state -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/products_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/background"
+                android:clipToPadding="false"
+                android:paddingHorizontal="@dimen/spacing_md"
+                android:paddingVertical="@dimen/spacing_md" />
+
+            <LinearLayout
+                android:id="@+id/empty_state_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="@dimen/spacing_3xl"
+                android:visibility="gone"
+                android:background="@color/background">
+
+                <!-- Decorative icon -->
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginBottom="@dimen/spacing_2xl"
+                    android:background="@drawable/empty_state_circle_bg">
+
+                    <ImageView
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_empty_products"
+                        android:contentDescription="No products"
+                        app:tint="@color/primary" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/empty_view_text_products"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No products yet"
+                    style="@style/TextHeadline2"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="@dimen/spacing_md" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Start building your catalogue by adding your first product. Use the floating button below to get started."
+                    style="@style/TextBody2"
+                    android:textAlignment="center"
+                    android:layout_marginBottom="@dimen/spacing_2xl" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_add_first_product"
+                    style="@style/ButtonPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Your First Product"
+                    app:icon="@drawable/ic_add"
+                    app:iconGravity="textStart" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Modern floating action button for adding products -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_product"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
-        app:tint="@android:color/white"
-        android:contentDescription="Add Product" />
+        android:layout_margin="@dimen/spacing_2xl"
+        android:text="Add Product"
+        app:icon="@drawable/ic_add"
+        app:iconTint="@android:color/white"
+        app:backgroundTint="@color/accent"
+        android:textColor="@color/text_on_accent"
+        app:elevation="6dp"
+        app:fabSize="normal"
+        android:contentDescription="Add new product" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

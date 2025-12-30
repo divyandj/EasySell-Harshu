@@ -57,7 +57,9 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor) // For debugging network calls
+    implementation("com.google.firebase:firebase-messaging:25.0.1")
 
+    implementation("com.google.firebase:firebase-auth:24.0.1")
     // Image Loading
     implementation(libs.glide)
 

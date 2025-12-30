@@ -65,12 +65,14 @@ public class AddProductActivity extends AppCompatActivity {
     private String catalogueId;
     private final List<Uri> selectedMediaUris = new ArrayList<>();
 
+    private final List<MediaItem> existingMediaItems = new ArrayList<>();
+
     // A variable to keep track of which variant's image is being selected
     private ImageView targetVariantImageView;
 
     private final Executor executor = Executors.newSingleThreadExecutor();
     private final Handler handler = new Handler(Looper.getMainLooper());
-
+    private String productIdToEdit = null;
     // Launcher for the MAIN product media
     private final ActivityResultLauncher<Intent> mediaPickerLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -118,6 +120,7 @@ public class AddProductActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         accessToken = SessionManager.getInstance().getAccessToken();
         catalogueId = getIntent().getStringExtra("CATALOGUE_ID");
+        productIdToEdit = getIntent().getStringExtra("PRODUCT_ID"); // Check if we received a Product ID
 
         if (catalogueId == null || accessToken == null) {
             Toast.makeText(this, "Error: Critical data missing. Please restart.", Toast.LENGTH_LONG).show();
@@ -126,6 +129,15 @@ public class AddProductActivity extends AppCompatActivity {
         }
 
         setupUI();
+        if (productIdToEdit != null && !productIdToEdit.isEmpty()) {
+            setTitle("Edit Product"); // Change toolbar title
+            fetchAndPopulateProductData(productIdToEdit);
+        } else {
+            setTitle("Add New Product");
+            // Optionally open the first card by default only for new products
+            binding.mediaContent.setVisibility(View.VISIBLE);
+            binding.mediaArrow.setRotation(180);
+        }
     }
 
     @Override
@@ -211,16 +223,52 @@ public class AddProductActivity extends AppCompatActivity {
         mediaPickerLauncher.launch(Intent.createChooser(intent, "Select Media"));
     }
 
+    // In AddProductActivity.java
+// REPLACE this entire method
+
     private void updateMediaPreview() {
-        binding.mediaPreviewContainer.removeAllViews();
+        binding.mediaPreviewContainer.removeAllViews(); // Clear the existing previews
+        LayoutInflater inflater = LayoutInflater.from(this);
+
+        // --- 1. Display Existing Media (from Firestore, tracked in existingMediaItems) ---
+        for (MediaItem item : existingMediaItems) {
+            // Inflate the new preview layout
+            View previewView = inflater.inflate(R.layout.item_media_preview, binding.mediaPreviewContainer, false);
+            ImageView imageView = previewView.findViewById(R.id.preview_image_view);
+            View removeButton = previewView.findViewById(R.id.button_remove_media);
+
+            // Load the image using Glide
+            Glide.with(this).load(item.getUrl()).placeholder(R.color.gray_200).into(imageView);
+
+            // Store the MediaItem object in the button's tag
+            removeButton.setTag(item);
+            removeButton.setOnClickListener(v -> {
+                MediaItem itemToRemove = (MediaItem) v.getTag();
+                existingMediaItems.remove(itemToRemove); // Remove from the list of existing items
+                updateMediaPreview(); // Refresh the entire preview area
+                // Note: Actual file deletion from Drive isn't handled here yet.
+            });
+            binding.mediaPreviewContainer.addView(previewView); // Add the preview to the layout
+        }
+
+        // --- 2. Display Newly Selected Media (from gallery, tracked in selectedMediaUris) ---
         for (Uri uri : selectedMediaUris) {
-            ImageView imageView = new ImageView(this);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(240, 240);
-            params.setMargins(0, 0, 16, 0);
-            imageView.setLayoutParams(params);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            Glide.with(this).load(uri).into(imageView);
-            binding.mediaPreviewContainer.addView(imageView);
+            // Inflate the new preview layout
+            View previewView = inflater.inflate(R.layout.item_media_preview, binding.mediaPreviewContainer, false);
+            ImageView imageView = previewView.findViewById(R.id.preview_image_view);
+            View removeButton = previewView.findViewById(R.id.button_remove_media);
+
+            // Load the image using Glide from the local Uri
+            Glide.with(this).load(uri).placeholder(R.color.gray_200).into(imageView);
+
+            // Store the Uri object in the button's tag
+            removeButton.setTag(uri);
+            removeButton.setOnClickListener(v -> {
+                Uri uriToRemove = (Uri) v.getTag();
+                selectedMediaUris.remove(uriToRemove); // Remove from the list of newly selected items
+                updateMediaPreview(); // Refresh the entire preview area
+            });
+            binding.mediaPreviewContainer.addView(previewView); // Add the preview to the layout
         }
     }
     //endregion
@@ -386,8 +434,10 @@ public class AddProductActivity extends AppCompatActivity {
             Toast.makeText(this, "Product Title is required.", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (selectedMediaUris.isEmpty()) {
+        // Corrected Validation: Check if *both* existing and new selections are empty
+        if (existingMediaItems.isEmpty() && selectedMediaUris.isEmpty()) {
             Toast.makeText(this, "Please select at least one main product image or video.", Toast.LENGTH_SHORT).show();
+            setLoading(false); // Make sure to stop loading indicator
             return;
         }
         setLoading(true);
@@ -545,35 +595,45 @@ public class AddProductActivity extends AppCompatActivity {
     //region Upload and Save to DB
     // REPLACE this entire method
     // REPLACE this entire method
+    // In AddProductActivity.java
+// REPLACE this entire method
+
     private void uploadAllMediaAndSaveProduct(Product product) {
         Map<Uri, Object> uploadsToPerform = new HashMap<>();
 
-        // 1. Add all main media files to the upload queue
+        // 1. Queue NEWLY selected main media files for upload
+        // Iterate through the URIs the user currently sees selected in the UI
         for (Uri uri : selectedMediaUris) {
-            uploadsToPerform.put(uri, "main_media");
+            uploadsToPerform.put(uri, "main_media"); // Mark as needing upload
         }
 
-        // 2. Add all variant-specific images to the upload queue
+        // 2. Queue NEWLY selected variant images for upload
         if (product.isHasVariants() && product.getVariants() != null) {
             for (ProductVariant variant : product.getVariants()) {
-                // We retrieve the Uri string we temporarily stored in the barcode field
+                // Check the barcode field for a Uri string (our temporary storage)
                 if (variant.getBarcode() != null && variant.getBarcode().startsWith("content://")) {
                     Uri variantUri = Uri.parse(variant.getBarcode());
-                    uploadsToPerform.put(variantUri, variant); // The target is the variant object
+                    uploadsToPerform.put(variantUri, variant); // Mark variant image for upload
                     variant.setBarcode(null); // Clear the temporary field
                 }
+                // If barcode is null/not a Uri, it means either no image was selected
+                // or the existing image URL (if editing) is still valid and doesn't need re-upload.
             }
         }
 
+        // If there's nothing NEW to upload, just save with the current state of existing media
         if (uploadsToPerform.isEmpty()) {
+            // The existingMediaItems list now correctly reflects items the user *didn't* delete.
+            product.setMedia(new ArrayList<>(existingMediaItems));
             saveProductToFirestore(product);
             return;
         }
 
-        List<MediaItem> uploadedMainMedia = Collections.synchronizedList(new ArrayList<>());
+        // List to hold results of NEW uploads
+        List<MediaItem> newlyUploadedMedia = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger uploadCounter = new AtomicInteger(uploadsToPerform.size());
 
-        // 3. Loop through the combined map and upload everything
+        // 3. Loop through and upload only the NEW files
         for (Map.Entry<Uri, Object> entry : uploadsToPerform.entrySet()) {
             Uri uriToUpload = entry.getKey();
             Object uploadTarget = entry.getValue();
@@ -583,15 +643,23 @@ public class AddProductActivity extends AppCompatActivity {
                 public void onSuccess(MediaItem mediaItem) {
                     // Check where this URL needs to go
                     if (uploadTarget.equals("main_media")) {
-                        uploadedMainMedia.add(mediaItem);
+                        newlyUploadedMedia.add(mediaItem);
                     } else if (uploadTarget instanceof ProductVariant) {
+                        // Update the variant's imageUrl (handles both adding new / replacing existing)
                         ((ProductVariant) uploadTarget).setImageUrl(mediaItem.getUrl());
                     }
 
-                    // If this was the last upload, finalize and save
+                    // If this was the last NEW upload, combine lists and save
                     if (uploadCounter.decrementAndGet() == 0) {
-                        product.setMedia(uploadedMainMedia);
+                        // Start with the existing media items that were NOT removed by the user
+                        List<MediaItem> finalMediaList = new ArrayList<>(existingMediaItems);
+                        // Add all the newly uploaded items
+                        finalMediaList.addAll(newlyUploadedMedia);
+                        // Set the combined list to the product
+                        product.setMedia(finalMediaList);
                         saveProductToFirestore(product);
+                        // Optional TODO: Implement Drive file deletion here for items
+                        // that were originally loaded but are NOT in existingMediaItems anymore.
                     }
                 }
                 @Override
@@ -605,14 +673,23 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void saveProductToFirestore(Product product) {
-        // This is where you would save the final 'product' object to Firestore
-        // For brevity, the original Firebase code is kept from your file
-        db.collection("products").add(product)
-                .addOnSuccessListener(documentReference -> handler.post(() -> {
-                    Toast.makeText(this, "Product Saved!", Toast.LENGTH_SHORT).show();
-                    finish();
-                }))
-                .addOnFailureListener(e -> showError("Failed to save product data: " + e.getMessage()));
+        if (productIdToEdit != null) {
+            // --- UPDATE Existing Product ---
+            db.collection("products").document(productIdToEdit).set(product) // Use set() to overwrite
+                    .addOnSuccessListener(aVoid -> handler.post(() -> {
+                        Toast.makeText(this, "Product Updated!", Toast.LENGTH_SHORT).show();
+                        finish(); // Go back after successful update
+                    }))
+                    .addOnFailureListener(e -> showError("Failed to update product: " + e.getMessage()));
+        } else {
+            // --- CREATE New Product ---
+            db.collection("products").add(product)
+                    .addOnSuccessListener(documentReference -> handler.post(() -> {
+                        Toast.makeText(this, "Product Saved!", Toast.LENGTH_SHORT).show();
+                        finish(); // Go back after successful save
+                    }))
+                    .addOnFailureListener(e -> showError("Failed to save product data: " + e.getMessage()));
+        }
     }
 
     interface MediaUploadCallback {
@@ -717,4 +794,210 @@ public class AddProductActivity extends AppCompatActivity {
         });
     }
     //endregion
+
+
+
+    // In AddProductActivity.java
+
+    // ADD THIS ENTIRE METHOD
+    private void fetchAndPopulateProductData(String productId) {
+        setLoading(true); // Show progress while loading
+        db.collection("products").document(productId).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    setLoading(false);
+                    if (documentSnapshot.exists()) {
+                        Product product = documentSnapshot.toObject(Product.class);
+                        if (product != null) {
+                            product.setId(documentSnapshot.getId()); // Store the ID
+                            populateForm(product);
+                        } else {
+                            showError("Failed to parse product data.");
+                        }
+                    } else {
+                        showError("Product not found.");
+                        finish(); // Close if product doesn't exist
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    setLoading(false);
+                    showError("Failed to fetch product: " + e.getMessage());
+                    Log.e(TAG, "Error fetching product", e);
+                    finish();
+                });
+    }
+
+    // ADD THIS ENTIRE METHOD (This is the complex part)
+    private void populateForm(Product product) {
+        // --- Populate Basic Info ---
+        binding.productTitleEditText.setText(product.getTitle());
+        binding.productDescriptionEditText.setText(product.getDescription());
+        binding.productSkuEditText.setText(product.getSku());
+        binding.productMoqEditText.setText(String.valueOf(product.getMinOrderQty()));
+        if (product.getTags() != null) {
+            binding.productTagsEditText.setText(String.join(", ", product.getTags()));
+        }
+
+        // --- Populate Pricing ---
+        binding.productPriceEditText.setText(String.format(Locale.US, "%.2f", product.getPrice()));
+        binding.productDiscountPriceEditText.setText(String.format(Locale.US, "%.2f", product.getDiscountedPrice()));
+        // Set Spinner Selection (requires comparing string values)
+        if (product.getPriceUnit() != null) {
+            ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) binding.priceUnitSpinner.getAdapter();
+            if (adapter != null) {
+                for (int i = 0; i < adapter.getCount(); i++) {
+                    if (product.getPriceUnit().equals(adapter.getItem(i).toString())) {
+                        binding.priceUnitSpinner.setSelection(i);
+                        break;
+                    }
+                }
+            }
+        }
+        // Populate Bulk Pricing
+        binding.bulkPricingContainer.removeAllViews(); // Clear existing (if any)
+        if (product.getBulkDiscounts() != null) {
+            for (PriceSlab slab : product.getBulkDiscounts()) {
+                addPriceSlabRow(slab); // Reuse your existing method
+            }
+        }
+
+        // --- Populate Inventory ---
+        binding.inStockSwitch.setChecked(product.isInStock());
+        binding.quantityEditText.setText(String.valueOf(product.getAvailableQuantity()));
+        binding.allowBackordersSwitch.setChecked(product.isAllowBackorders());
+        binding.hideWhenOutOfStockSwitch.setChecked(product.isHideWhenOutOfStock());
+        // Trigger listener manually to set initial enabled state of OOS options
+        binding.allowBackordersSwitch.setEnabled(!product.isInStock());
+        binding.hideWhenOutOfStockSwitch.setEnabled(!product.isInStock());
+
+
+        // --- Populate Shipping & Taxes ---
+        binding.taxRateEditText.setText(String.format(Locale.US, "%.1f", product.getTaxRate()));
+        binding.weightEditText.setText(String.format(Locale.US, "%.2f", product.getWeight()));
+        // Set Weight Spinner Selection
+        if (product.getWeightUnit() != null) {
+            ArrayAdapter<CharSequence> adapter = (ArrayAdapter<CharSequence>) binding.weightUnitSpinner.getAdapter();
+            if (adapter != null) {
+                for (int i = 0; i < adapter.getCount(); i++) {
+                    if (product.getWeightUnit().equals(adapter.getItem(i).toString())) {
+                        binding.weightUnitSpinner.setSelection(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // --- Populate Custom Fields ---
+        binding.customFieldsContainer.removeAllViews(); // Clear existing
+        if (product.getCustomFields() != null) {
+            for (Map.Entry<String, String> entry : product.getCustomFields().entrySet()) {
+                addCustomFieldRow(entry.getKey(), entry.getValue()); // Reuse method
+            }
+        }
+
+        // --- Populate Variants ---
+        binding.hasVariantsSwitch.setChecked(product.isHasVariants());
+        toggleVariantMode(product.isHasVariants()); // Update UI visibility
+
+        if (product.isHasVariants()) {
+            binding.variantOptionsContainer.removeAllViews();
+            if (product.getVariantOptions() != null) {
+                for (Map.Entry<String, List<String>> entry : product.getVariantOptions().entrySet()) {
+                    // Need a modified addVariantOptionRow or a new method to pre-fill
+                    addVariantOptionRowWithData(entry.getKey(), String.join(",", entry.getValue()));
+                }
+            }
+            // Generate and populate the variant rows
+            generateAndDisplayVariantsForEdit(product.getVariants());
+        }
+
+        // --- Populate Media ---
+        // Note: We cannot easily pre-select local files. We will just show existing URLs.
+        // If you want to allow *replacing* images, the logic becomes much more complex.
+        // --- Populate Media (Handles Existing Media for Edit Mode) ---
+        existingMediaItems.clear(); // Clear any previous state from other edits
+        selectedMediaUris.clear();  // Clear any newly selected URIs from previous state
+        if (product.getMedia() != null) {
+            existingMediaItems.addAll(product.getMedia()); // Store the currently existing media items
+        }
+        updateMediaPreview(); // Call the updated preview method to display them
+
+        // Ensure all cards start collapsed in edit mode for clarity
+        binding.mediaContent.setVisibility(View.GONE); binding.mediaArrow.setRotation(0);
+        binding.basicInfoContent.setVisibility(View.GONE); binding.basicInfoArrow.setRotation(0);
+        binding.pricingContent.setVisibility(View.GONE); binding.pricingArrow.setRotation(0);
+        binding.inventoryContent.setVisibility(View.GONE); binding.inventoryArrow.setRotation(0);
+        binding.shippingContent.setVisibility(View.GONE); binding.shippingArrow.setRotation(0);
+        binding.customFieldsContent.setVisibility(View.GONE); binding.customFieldsArrow.setRotation(0);
+        binding.variantsContent.setVisibility(View.GONE); binding.variantsArrow.setRotation(0);
+
+    }
+
+    // ADD HELPER: Modified version to pre-fill variant options
+    private void addVariantOptionRowWithData(String name, String values) {
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View rowView = inflater.inflate(R.layout.layout_variant_option_row, binding.variantOptionsContainer, false);
+        EditText nameEt = rowView.findViewById(R.id.variant_option_name_edit_text);
+        EditText valuesEt = rowView.findViewById(R.id.variant_option_values_edit_text);
+        View removeButton = rowView.findViewById(R.id.button_remove_option);
+
+        nameEt.setText(name);
+        valuesEt.setText(values);
+
+        removeButton.setOnClickListener(v -> binding.variantOptionsContainer.removeView(rowView));
+        binding.variantOptionsContainer.addView(rowView);
+    }
+
+    // ADD HELPER: Modified version to generate rows AND fill them with existing variant data
+    private void generateAndDisplayVariantsForEdit(List<ProductVariant> existingVariants) {
+        binding.generatedVariantsContainer.removeAllViews();
+        if (existingVariants == null || existingVariants.isEmpty()) return;
+
+        for (ProductVariant variant : existingVariants) {
+            Map<String, String> combination = variant.getOptions();
+            if (combination == null) continue; // Skip if options are missing
+
+            LayoutInflater inflater = LayoutInflater.from(this);
+            View rowView = inflater.inflate(R.layout.layout_generated_variant_row, binding.generatedVariantsContainer, false);
+
+            TextView name = rowView.findViewById(R.id.variant_name_text);
+            ImageView variantImage = rowView.findViewById(R.id.variant_image);
+            View selectImageButton = rowView.findViewById(R.id.button_select_variant_image);
+            View removeButton = rowView.findViewById(R.id.button_remove_variant);
+            EditText priceModifierEt = rowView.findViewById(R.id.variant_price_modifier_edit_text);
+            EditText skuOverrideEt = rowView.findViewById(R.id.variant_sku_override_edit_text);
+            EditText quantityEt = rowView.findViewById(R.id.variant_quantity_edit_text);
+
+            // Build and set the variant name
+            StringBuilder comboName = new StringBuilder();
+            for (String value : combination.values()) {
+                if (comboName.length() > 0) comboName.append(" / ");
+                comboName.append(value);
+            }
+            name.setText(comboName.toString());
+
+            // Set existing data
+            priceModifierEt.setText(String.format(Locale.US, "%.2f", variant.getPriceModifier()));
+            skuOverrideEt.setText(variant.getSkuOverride());
+            quantityEt.setText(String.valueOf(variant.getQuantity()));
+
+            // Display existing image
+            if (variant.getImageUrl() != null && !variant.getImageUrl().isEmpty()) {
+                Glide.with(this).load(variant.getImageUrl()).placeholder(R.drawable.ic_add_photo).error(R.drawable.ic_add_photo).into(variantImage);
+                // Store the URL in the tag. If user selects a new image, the tag will be updated to a Uri.
+                variantImage.setTag(variant.getImageUrl());
+            } else {
+                variantImage.setImageResource(R.drawable.ic_add_photo);
+            }
+
+            rowView.setTag(combination); // Store combination options
+
+            selectImageButton.setOnClickListener(v -> {
+                targetVariantImageView = variantImage;
+                variantImagePickerLauncher.launch("image/*");
+            });
+
+            removeButton.setOnClickListener(v -> binding.generatedVariantsContainer.removeView(rowView));
+            binding.generatedVariantsContainer.addView(rowView);
+        }
+    }
 }
