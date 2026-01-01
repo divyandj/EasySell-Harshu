@@ -1,36 +1,35 @@
 package com.easysell;
 
 import android.content.Intent;
+import android.net.Uri; // Import Uri
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.easysell.databinding.ActivityCatalogueDetailBinding; // Use ViewBinding
+import com.easysell.databinding.ActivityCatalogueDetailBinding;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.WriteBatch; // Import WriteBatch
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CatalogueDetailActivity extends AppCompatActivity implements ProductAdapter.OnProductActionClickListener { // Implement the listener
+public class CatalogueDetailActivity extends AppCompatActivity implements ProductAdapter.OnProductActionClickListener {
 
     private static final String TAG = "CatalogueDetail";
-    private ActivityCatalogueDetailBinding binding; // Use ViewBinding
+    private ActivityCatalogueDetailBinding binding;
     private FirebaseFirestore db;
     private ProductAdapter adapter;
     private List<Product> productList;
     private String catalogueId;
+    private String catalogueName;
     private ListenerRegistration productListener;
 
     @Override
@@ -40,7 +39,7 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
         setContentView(binding.getRoot());
 
         catalogueId = getIntent().getStringExtra("CATALOGUE_ID");
-        String catalogueName = getIntent().getStringExtra("CATALOGUE_NAME");
+        catalogueName = getIntent().getStringExtra("CATALOGUE_NAME");
 
         if (catalogueId == null) {
             Toast.makeText(this, "Error: Catalogue ID missing.", Toast.LENGTH_SHORT).show();
@@ -48,24 +47,27 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
             return;
         }
 
-        // Setup Toolbar from the new layout
+        // Setup Toolbar
         setSupportActionBar(binding.toolbar);
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(catalogueName);
-            // Assuming you have a back arrow / menu icon setup in XML or theme
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false); // Adjust if you want a back arrow
+            getSupportActionBar().setTitle(catalogueName != null ? catalogueName : "Catalogue Details");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
         db = FirebaseFirestore.getInstance();
         setupRecyclerView();
 
-        // Setup FAB and Empty State Button clicks
+        // --- BUTTON LISTENERS ---
+
+        // 1. FAB & Empty State (Add Product)
         binding.fabAddProduct.setOnClickListener(v -> navigateToAddProduct(null));
         binding.buttonAddFirstProduct.setOnClickListener(v -> navigateToAddProduct(null));
 
-        // Setup Preview Button click (using ID from your new stats card)
-        binding.buttonFilter.setOnClickListener(v -> previewCatalogue());
+        // 2. Share Catalogue Button
+        binding.btnShareCatalogue.setOnClickListener(v -> shareCatalogue());
 
+        // 3. Preview Catalogue Button (NEW)
+        binding.btnPreviewCatalogue.setOnClickListener(v -> previewCatalogue());
     }
 
     @Override
@@ -82,37 +84,25 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
         }
     }
 
-    // Handle Toolbar Menu clicks (for Preview if you add it there)
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate your menu (e.g., menu/catalogue_detail_menu.xml with a preview item)
-        // getMenuInflater().inflate(R.menu.catalogue_detail_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        // Handle menu item clicks (e.g., Preview)
-        // if (item.getItemId() == R.id.action_preview) {
-        //     previewCatalogue();
-        //     return true;
-        // }
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
-
     private void setupRecyclerView() {
         productList = new ArrayList<>();
-        // Pass 'this' as the listener
         adapter = new ProductAdapter(this, productList, this);
-        // Use the correct RecyclerView ID from your new layout
         binding.productsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         binding.productsRecyclerView.setAdapter(adapter);
     }
 
     private void loadProducts() {
         if (productListener != null) {
-            productListener.remove(); // Remove previous listener if any
+            productListener.remove();
         }
 
         Query query = db.collection("products")
@@ -131,64 +121,95 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
             }
             adapter.notifyDataSetChanged();
 
-            // Use the new empty state container ID
-            binding.emptyStateContainer.setVisibility(productList.isEmpty() ? View.VISIBLE : View.GONE);
-            binding.productsRecyclerView.setVisibility(productList.isEmpty() ? View.GONE : View.VISIBLE);
+            // UI Updates
+            boolean isEmpty = productList.isEmpty();
+            binding.emptyStateContainer.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+            binding.productsRecyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+            binding.textTotalProductsCount.setText(String.valueOf(productList.size()));
         });
+    }
+
+    // --- SHARE FEATURE ---
+    private void shareCatalogue() {
+        if (catalogueId == null) return;
+
+        String deepLink = "https://easy-sell-web.vercel.app/catalogue/" + catalogueId;
+        String messageBody = String.format(
+                "Check out my catalogue \"%s\" on Easy Sell!\n\nBrowse my products here:\n%s",
+                catalogueName != null ? catalogueName : "My Store",
+                deepLink
+        );
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "My Catalogue: " + catalogueName);
+        shareIntent.putExtra(Intent.EXTRA_TEXT, messageBody);
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Share Catalogue via"));
+        } catch (Exception e) {
+            Toast.makeText(this, "No app found to share.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // --- PREVIEW FEATURE (Opens in Browser) ---
+    private void previewCatalogue() {
+        if (catalogueId == null) return;
+
+        // The URL to open
+        String url = "https://easy-sell-web.vercel.app/catalogue/" + catalogueId;
+
+        try {
+            // Create an Intent to view the URL
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(browserIntent);
+        } catch (Exception e) {
+            // Handle case where no browser is installed
+            Toast.makeText(this, "No browser app found.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error opening browser", e);
+        }
     }
 
     private void navigateToAddProduct(String productId) {
         Intent intent = new Intent(this, AddProductActivity.class);
         intent.putExtra("CATALOGUE_ID", catalogueId);
         if (productId != null) {
-            intent.putExtra("PRODUCT_ID", productId); // Pass ID for editing
+            intent.putExtra("PRODUCT_ID", productId);
         }
         startActivity(intent);
     }
 
-    private void previewCatalogue() {
-        // TODO: Implement logic to open the customer-facing web view/app
-        // You might generate a URL like: "https://your-web-app.com/catalogue/" + catalogueId
-        Toast.makeText(this, "Preview functionality not yet implemented.", Toast.LENGTH_SHORT).show();
-        // Example:
-        // String previewUrl = "https://your-preview-domain.com/cat/" + catalogueId;
-        // Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(previewUrl));
-        // startActivity(browserIntent);
-    }
-
-    // --- Implementation of ProductAdapter.OnProductActionClickListener ---
+    // --- ADAPTER LISTENERS ---
 
     @Override
     public void onEditClick(Product product) {
-        navigateToAddProduct(product.getId()); // Pass product ID to edit mode
+        navigateToAddProduct(product.getId());
     }
 
     @Override
     public void onVisibilityToggleClick(Product product) {
-        // Update the product's visibility in Firestore
         DocumentReference productRef = db.collection("products").document(product.getId());
-        boolean newVisibility = !product.isVisibleInCatalogue(); // Toggle the current state
+        boolean newVisibility = !product.isVisibleInCatalogue();
 
         productRef.update("visibleInCatalogue", newVisibility)
                 .addOnSuccessListener(aVoid -> {
-                    // Firestore listener will automatically update the UI,
-                    // but a quick feedback message is good UX.
-                    String message = newVisibility ? "Product made visible" : "Product hidden";
+                    String message = newVisibility ? "Product is now visible" : "Product hidden";
                     Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error updating product visibility", e);
+                    Log.e(TAG, "Error updating visibility", e);
                     Toast.makeText(this, "Failed to update visibility", Toast.LENGTH_SHORT).show();
                 });
     }
 
     @Override
     public void onItemClick(Product product) {
-        // Navigate to the Seller's Product Detail Screen
-        Intent intent = new Intent(this, ProductDetailSellerActivity.class); // Use the correct activity name
-        intent.putExtra("PRODUCT_ID", product.getId());
-        // You might want to pass the whole product object (make Product Parcelable)
-        // or just fetch it again in the detail activity using the ID.
-        startActivity(intent);
+        try {
+            Intent intent = new Intent(this, ProductDetailSellerActivity.class);
+            intent.putExtra("PRODUCT_ID", product.getId());
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Selected: " + product.getTitle(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
