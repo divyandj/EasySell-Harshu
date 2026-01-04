@@ -13,7 +13,7 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
+        multiDexEnabled = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -58,10 +58,13 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging.interceptor) // For debugging network calls
     implementation("com.google.firebase:firebase-messaging:25.0.1")
-
+// Cloudinary (Image Uploads)
+    implementation("com.cloudinary:cloudinary-android:3.1.2")
     implementation("com.google.firebase:firebase-auth:24.0.1")
     // Image Loading
     implementation(libs.glide)
+    implementation("androidx.multidex:multidex:2.0.1")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0") // <--- ADD THIS (Make sure version matches your glide version)
 
     
 }

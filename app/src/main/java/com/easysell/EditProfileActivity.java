@@ -12,33 +12,19 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.cloudinary.android.MediaManager;
+import com.cloudinary.android.callback.ErrorInfo;
+import com.cloudinary.android.callback.UploadCallback;
 import com.easysell.databinding.ActivityEditProfileBinding;
-import com.easysell.network.RetrofitClient;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class EditProfileActivity extends AppCompatActivity {
 
@@ -46,10 +32,8 @@ public class EditProfileActivity extends AppCompatActivity {
     private ActivityEditProfileBinding binding;
     private FirebaseFirestore db;
     private String userId;
-    private String accessToken;
 
-    // Background Threading for Network Calls
-    private final Executor executor = Executors.newSingleThreadExecutor();
+    // Helper to ensure UI updates happen on Main Thread
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     // State Variables for Images
@@ -68,18 +52,10 @@ public class EditProfileActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        // 1. Get User ID & Auth Token
+        // 1. Get User ID
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
             userId = account.getId();
-            // Get Access Token from SessionManager (same as AddProductActivity)
-            accessToken = SessionManager.getInstance().getAccessToken();
-
-            if (accessToken == null) {
-                Toast.makeText(this, "Session expired. Please restart the app.", Toast.LENGTH_LONG).show();
-                finish();
-                return;
-            }
         } else {
             Toast.makeText(this, "User not identified.", Toast.LENGTH_SHORT).show();
             finish();
@@ -186,7 +162,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private void processLogoUpload() {
         if (selectedLogoUri != null) {
             setLoading(true, "Uploading Logo...");
-            uploadSingleFile(selectedLogoUri, "profile_logo_" + System.currentTimeMillis(), new UploadCallback() {
+            uploadToCloudinary(selectedLogoUri, new OnUploadResult() {
                 @Override
                 public void onSuccess(String url) {
                     // Logo done, move to Signature
@@ -194,8 +170,8 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(String message) {
-                    showError("Logo Upload Failed: " + message);
+                public void onFailure(String error) {
+                    showError("Logo Upload Failed: " + error);
                 }
             });
         } else {
@@ -207,7 +183,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private void processSignatureUpload(String finalLogoUrl) {
         if (selectedSignatureUri != null) {
             setLoading(true, "Uploading Signature...");
-            uploadSingleFile(selectedSignatureUri, "profile_sign_" + System.currentTimeMillis(), new UploadCallback() {
+            uploadToCloudinary(selectedSignatureUri, new OnUploadResult() {
                 @Override
                 public void onSuccess(String url) {
                     // Signature done, save everything to Firestore
@@ -215,8 +191,8 @@ public class EditProfileActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onFailure(String message) {
-                    showError("Signature Upload Failed: " + message);
+                public void onFailure(String error) {
+                    showError("Signature Upload Failed: " + error);
                 }
             });
         } else {
@@ -224,6 +200,50 @@ public class EditProfileActivity extends AppCompatActivity {
             saveToFirestore(finalLogoUrl, currentSignatureUrl);
         }
     }
+
+    // --- CLOUDINARY UPLOAD LOGIC ---
+
+    interface OnUploadResult {
+        void onSuccess(String url);
+        void onFailure(String error);
+    }
+
+    private void uploadToCloudinary(Uri uri, OnUploadResult listener) {
+        MediaManager.get().upload(uri)
+                .unsigned("easysell_preset") // Uses your specific preset
+                .option("resource_type", "image")
+                .callback(new UploadCallback() {
+                    @Override
+                    public void onStart(String requestId) {
+                        // Optional: Update progress
+                    }
+
+                    @Override
+                    public void onProgress(String requestId, long bytes, long totalBytes) {
+                        // Optional: Update progress bar
+                    }
+
+                    @Override
+                    public void onSuccess(String requestId, Map resultData) {
+                        // Cloudinary returns a generic Map. Extract the secure URL.
+                        String url = (String) resultData.get("secure_url");
+                        listener.onSuccess(url);
+                    }
+
+                    @Override
+                    public void onError(String requestId, ErrorInfo error) {
+                        listener.onFailure(error.getDescription());
+                    }
+
+                    @Override
+                    public void onReschedule(String requestId, ErrorInfo error) {
+                        // Retry logic handled by SDK
+                    }
+                })
+                .dispatch();
+    }
+
+    // --- FIRESTORE SAVE ---
 
     private void saveToFirestore(String logoUrl, String signatureUrl) {
         setLoading(true, "Updating Database...");
@@ -235,12 +255,10 @@ public class EditProfileActivity extends AppCompatActivity {
         data.put("gstin", binding.etGst.getText().toString().trim());
         data.put("address", binding.etAddress.getText().toString().trim());
 
-        // Save URLs (Handle potential nulls if no previous url existed)
+        // Save URLs
         if (logoUrl != null) data.put("profileImageUrl", logoUrl);
         if (signatureUrl != null) data.put("signatureImageUrl", signatureUrl);
 
-        // Using set() to save. This overwrites the document or creates it.
-        // Since we loaded the existing data first, we are safely updating the whole profile.
         db.collection("users").document(userId).set(data)
                 .addOnSuccessListener(aVoid -> handler.post(() -> {
                     setLoading(false, "");
@@ -250,99 +268,7 @@ public class EditProfileActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> showError("Database Error: " + e.getMessage()));
     }
 
-    // --- GOOGLE DRIVE UPLOAD LOGIC ---
-
-    interface UploadCallback {
-        void onSuccess(String url);
-        void onFailure(String message);
-    }
-
-    private void uploadSingleFile(final Uri uri, final String fileName, final UploadCallback callback) {
-        final String mimeType = getContentResolver().getType(uri);
-        final String authHeader = "Bearer " + accessToken;
-
-        executor.execute(() -> {
-            try {
-                // 1. Prepare File
-                InputStream inputStream = getContentResolver().openInputStream(uri);
-                byte[] fileBytes = getBytes(inputStream);
-                if (inputStream != null) inputStream.close();
-
-                RequestBody fileRequestBody = RequestBody.create(fileBytes, MediaType.parse(mimeType != null ? mimeType : "image/jpeg"));
-                MultipartBody.Part filePart = MultipartBody.Part.createFormData("file", fileName, fileRequestBody);
-
-                // 2. Prepare Metadata
-                JSONObject metadataJson = new JSONObject();
-                metadataJson.put("name", fileName);
-                // Note: We upload to root folder to keep logic simple and identical to AddProductActivity
-                RequestBody metadataRequestBody = RequestBody.create(metadataJson.toString(), MediaType.parse("application/json; charset=utf-8"));
-
-                // 3. Upload Call
-                RetrofitClient.getInstance().getApiService().uploadFileMultipart(authHeader, metadataRequestBody, filePart)
-                        .enqueue(new Callback<ResponseBody>() {
-                            @Override
-                            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                                if (response.isSuccessful() && response.body() != null) {
-                                    try {
-                                        String fileId = new JSONObject(response.body().string()).getString("id");
-                                        // 4. Set Permissions
-                                        setPermissionsAndFinalize(authHeader, fileId, callback);
-                                    } catch (Exception e) {
-                                        callback.onFailure("Response Parse Error: " + e.getMessage());
-                                    }
-                                } else {
-                                    callback.onFailure("Upload Failed (Code: " + response.code() + ")");
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                                callback.onFailure("Network Error: " + t.getMessage());
-                            }
-                        });
-
-            } catch (Exception e) {
-                callback.onFailure("File Prep Error: " + e.getMessage());
-            }
-        });
-    }
-
-    private void setPermissionsAndFinalize(String authHeader, String fileId, UploadCallback callback) {
-        Map<String, String> permissionBody = new HashMap<>();
-        permissionBody.put("role", "reader");
-        permissionBody.put("type", "anyone");
-
-        RetrofitClient.getInstance().getApiService().createPermissions(authHeader, fileId, permissionBody)
-                .enqueue(new Callback<ResponseBody>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
-                        if (response.isSuccessful()) {
-                            // 5. Generate Direct Link
-                            String directLink = "https://drive.google.com/uc?export=download&id=" + fileId;
-                            callback.onSuccess(directLink);
-                        } else {
-                            callback.onFailure("Permission Error (Code: " + response.code() + ")");
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
-                        callback.onFailure("Permission Network Error: " + t.getMessage());
-                    }
-                });
-    }
-
     // --- HELPER METHODS ---
-
-    private byte[] getBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        int len;
-        while ((len = inputStream.read(buffer)) != -1) {
-            byteBuffer.write(buffer, 0, len);
-        }
-        return byteBuffer.toByteArray();
-    }
 
     private void setLoading(boolean isLoading, String message) {
         handler.post(() -> {

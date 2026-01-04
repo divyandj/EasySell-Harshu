@@ -3,8 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <queries>
+        <package android:name="com.google.android.gms" />
+    </queries>
     <application
+        android:name=".EasySellApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -52,9 +55,6 @@
             android:exported="false" />
         <activity
             android:name=".AddCatalogueActivity"
-            android:exported="false" />
-        <activity
-            android:name=".AddCategoryActivity"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"

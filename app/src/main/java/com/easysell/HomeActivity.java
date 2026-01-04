@@ -14,7 +14,6 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -24,12 +23,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.messaging.FirebaseMessaging; // REQUIRED
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,13 +48,15 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     private GoogleSignInAccount currentAccount; // Store the account info
 
-    // --- 1. PERMISSION LAUNCHER (New for Android 13+) ---
+    // --- 1. PERMISSION LAUNCHER ---
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     Log.d(TAG, "Notification permission granted");
+                    // Fix: Initialize subscriptions immediately after permission
+                    initNotifications();
                 } else {
-                    Toast.makeText(this, "Notifications disabled. You won't see new order alerts.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Notifications disabled. You won't receive order alerts.", Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -76,64 +76,93 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build();
         googleSignInClient = GoogleSignIn.getClient(this, gso);
 
-        // --- 2. ASK FOR PERMISSION ON STARTUP ---
+        // --- 2. SETUP NOTIFICATIONS ---
         askNotificationPermission();
 
         // --- CLICK LISTENERS ---
+        setupClickListeners();
 
-        // 1. Add Category FAB
+        setupRecyclerView();
+    }
+
+    // --- 3. NOTIFICATION LOGIC (CRITICAL FIX) ---
+    private void askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                    PackageManager.PERMISSION_GRANTED) {
+                // Permission already granted, subscribe to topics
+                initNotifications();
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            } else {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            }
+        } else {
+            // For older Android versions, permission is granted at install time
+            initNotifications();
+        }
+    }
+
+    /**
+     * Subscribes the device to the backend topics ("admin_orders" and "admin_new_users").
+     * Without this, the backend sends messages into the void.
+     */
+    private void initNotifications() {
+        // 1. Subscribe to Orders (Matches your backend: topic: "admin_orders")
+        FirebaseMessaging.getInstance().subscribeToTopic("admin_orders")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "✅ Subscribed to admin_orders");
+                    } else {
+                        Log.e(TAG, "❌ Failed to subscribe to admin_orders", task.getException());
+                    }
+                });
+
+        // 2. Subscribe to New Users (Matches your backend: topic: "admin_new_users")
+        FirebaseMessaging.getInstance().subscribeToTopic("admin_new_users")
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d(TAG, "✅ Subscribed to admin_new_users");
+                    }
+                });
+
+        // 3. Log Token for Debugging
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("FCM_TOKEN", "Token: " + task.getResult());
+                    }
+                });
+    }
+
+    private void setupClickListeners() {
         binding.fabAddCategory.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, AddCatalogueActivity.class);
             startActivity(intent);
         });
 
-        // 2. Orders Card
         binding.ordersCard.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, OrdersActivity.class);
             startActivity(intent);
         });
 
-        // 3. User Requests Card
         binding.requestsCard.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, UserRequestsActivity.class);
             startActivity(intent);
         });
 
-        // 4. Analytics Card (Placeholder for future update)
         binding.analyticsCard.setOnClickListener(view -> {
             Toast.makeText(this, "Analytics feature coming soon!", Toast.LENGTH_SHORT).show();
         });
 
-        // 5. Profile Icon (Top Left) - Navigates to Notification/Profile Settings
         binding.profileIcon.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
             startActivity(intent);
         });
 
-        // 6. View All Categories Text
         binding.viewAllText.setOnClickListener(v -> {
-            // Optional: You could scroll to top or open a full list activity
             binding.categoriesRecyclerView.smoothScrollToPosition(0);
         });
-
-        setupRecyclerView();
-    }
-
-    // --- 3. PERMISSION LOGIC ---
-    private void askNotificationPermission() {
-        // This is only necessary for API level >= 33 (Android 13)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                // Permission is already granted
-            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
-                // (Optional) Show UI explaining why you need notifications, then request
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
-            } else {
-                // Directly ask for the permission
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
-            }
-        }
     }
 
     @Override
@@ -179,32 +208,25 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
                     .whereEqualTo("userId", userId)
                     .orderBy("createdAt", Query.Direction.DESCENDING);
 
-            catalogueListener = query.addSnapshotListener(new EventListener<QuerySnapshot>() {
-                @Override
-                public void onEvent(@Nullable QuerySnapshot snapshots,
-                                    @Nullable FirebaseFirestoreException e) {
-                    if (e != null) {
-                        Log.w(TAG, "Catalogue listen failed.", e);
-                        return;
-                    }
+            catalogueListener = query.addSnapshotListener((snapshots, e) -> {
+                if (e != null) {
+                    Log.w(TAG, "Catalogue listen failed.", e);
+                    return;
+                }
 
-                    catalogueList.clear();
-                    if (snapshots != null) {
-                        Log.d(TAG, "Received " + snapshots.size() + " catalogues.");
-                        catalogueList.addAll(snapshots.toObjects(Catalogue.class));
-                        // Update the catalogue count text
-                        binding.totalCategoriesText.setText(String.valueOf(snapshots.size()));
-                    }
-                    adapter.notifyDataSetChanged();
+                catalogueList.clear();
+                if (snapshots != null) {
+                    catalogueList.addAll(snapshots.toObjects(Catalogue.class));
+                    binding.totalCategoriesText.setText(String.valueOf(snapshots.size()));
+                }
+                adapter.notifyDataSetChanged();
 
-                    // Toggle empty state visibility
-                    if (catalogueList.isEmpty()) {
-                        binding.emptyViewContainer.setVisibility(View.VISIBLE);
-                        binding.categoriesRecyclerView.setVisibility(View.GONE);
-                    } else {
-                        binding.emptyViewContainer.setVisibility(View.GONE);
-                        binding.categoriesRecyclerView.setVisibility(View.VISIBLE);
-                    }
+                if (catalogueList.isEmpty()) {
+                    binding.emptyViewContainer.setVisibility(View.VISIBLE);
+                    binding.categoriesRecyclerView.setVisibility(View.GONE);
+                } else {
+                    binding.emptyViewContainer.setVisibility(View.GONE);
+                    binding.categoriesRecyclerView.setVisibility(View.VISIBLE);
                 }
             });
         }
@@ -214,33 +236,24 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
     private void attachOrderCountListener() {
         if (currentAccount != null && currentAccount.getId() != null && orderCountListener == null) {
             String userId = currentAccount.getId(); // This is the SELLER's ID
-            Log.d(TAG, "Attaching order count listener for sellerId: " + userId);
-
-            // Collection Group Query to count all orders for this seller
             orderCountListener = db.collectionGroup("orders")
                     .whereEqualTo("sellerId", userId)
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable QuerySnapshot snapshots,
-                                            @Nullable FirebaseFirestoreException e) {
-                            if (e != null) {
-                                Log.e(TAG, "Order count query failed.", e);
-                                // Check if the error is due to missing index
-                                if (e.getCode() == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
-                                    Log.e(TAG, "MISSING INDEX! Please check Firebase Console.");
-                                    binding.totalOrdersText.setText("!");
-                                } else {
-                                    binding.totalOrdersText.setText("0");
-                                }
-                                return;
+                    .addSnapshotListener((snapshots, e) -> {
+                        if (e != null) {
+                            Log.e(TAG, "Order count query failed.", e);
+                            if (e.getCode() == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
+                                binding.totalOrdersText.setText("!");
+                            } else {
+                                binding.totalOrdersText.setText("0");
                             }
-
-                            int orderCount = 0;
-                            if (snapshots != null) {
-                                orderCount = snapshots.size();
-                            }
-                            binding.totalOrdersText.setText(String.valueOf(orderCount));
+                            return;
                         }
+
+                        int orderCount = 0;
+                        if (snapshots != null) {
+                            orderCount = snapshots.size();
+                        }
+                        binding.totalOrdersText.setText(String.valueOf(orderCount));
                     });
         }
     }
@@ -248,27 +261,20 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
     // --- LISTENER 3: PENDING REQUESTS ---
     private void attachRequestCountListener() {
         if (requestCountListener == null) {
-            Log.d(TAG, "Attaching request count listener.");
-
-            // Query: Count all users where status is 'pending'
             requestCountListener = db.collection("users")
                     .whereEqualTo("status", "pending")
-                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                        @Override
-                        public void onEvent(@Nullable QuerySnapshot snapshots,
-                                            @Nullable FirebaseFirestoreException e) {
-                            if (e != null) {
-                                Log.w(TAG, "Request count listen failed.", e);
-                                binding.totalRequestsText.setText("-");
-                                return;
-                            }
-
-                            int requestCount = 0;
-                            if (snapshots != null) {
-                                requestCount = snapshots.size();
-                            }
-                            binding.totalRequestsText.setText(String.valueOf(requestCount));
+                    .addSnapshotListener((snapshots, e) -> {
+                        if (e != null) {
+                            Log.w(TAG, "Request count listen failed.", e);
+                            binding.totalRequestsText.setText("-");
+                            return;
                         }
+
+                        int requestCount = 0;
+                        if (snapshots != null) {
+                            requestCount = snapshots.size();
+                        }
+                        binding.totalRequestsText.setText(String.valueOf(requestCount));
                     });
         }
     }
