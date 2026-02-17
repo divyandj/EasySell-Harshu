@@ -11,6 +11,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,7 +20,6 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AddProductActivity extends AppCompatActivity {
 
     private static final String TAG = "AddProductActivity";
+    private static final int DEFAULT_QUANTITY = -1; // Default value when user doesn't enter quantity
 
     private ActivityAddProductBinding binding;
     private FirebaseFirestore db;
@@ -71,6 +72,7 @@ public class AddProductActivity extends AppCompatActivity {
                         selectedMediaUris.add(result.getData().getData());
                     }
                     updateMediaPreview();
+                    checkEssentialsCompletion();
                 }
             }
     );
@@ -80,7 +82,7 @@ public class AddProductActivity extends AppCompatActivity {
             uri -> {
                 if (uri != null && targetVariantImageView != null) {
                     Glide.with(this).load(uri).into(targetVariantImageView);
-                    targetVariantImageView.setTag(uri); // Tag holds Uri for new selections
+                    targetVariantImageView.setTag(uri);
                     targetVariantImageView = null;
                 }
             }
@@ -108,15 +110,18 @@ public class AddProductActivity extends AppCompatActivity {
         }
 
         setupUI();
+        updateProgressSteps(1);
 
         if (productIdToEdit != null && !productIdToEdit.isEmpty()) {
-            setTitle("Edit Product");
+            binding.toolbar.setTitle("Edit Product");
             fetchAndPopulateProductData(productIdToEdit);
         } else {
-            setTitle("Add New Product");
-            // Default view state for new products
+            binding.toolbar.setTitle("Add New Product");
+            // Essential sections expanded by default
             binding.mediaContent.setVisibility(View.VISIBLE);
             binding.mediaArrow.setRotation(180);
+            binding.inventoryContent.setVisibility(View.VISIBLE);
+            binding.inventoryArrow.setRotation(180);
         }
     }
 
@@ -128,6 +133,7 @@ public class AddProductActivity extends AppCompatActivity {
 
     // --- UI SETUP ---
     private void setupUI() {
+        // Setup expandable sections
         setupExpandableCard(binding.mediaHeader, binding.mediaContent, binding.mediaArrow);
         setupExpandableCard(binding.basicInfoHeader, binding.basicInfoContent, binding.basicInfoArrow);
         setupExpandableCard(binding.pricingHeader, binding.pricingContent, binding.pricingArrow);
@@ -136,21 +142,110 @@ public class AddProductActivity extends AppCompatActivity {
         setupExpandableCard(binding.customFieldsHeader, binding.customFieldsContent, binding.customFieldsArrow);
         setupExpandableCard(binding.variantsHeader, binding.variantsContent, binding.variantsArrow);
 
-        binding.hasVariantsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> toggleVariantMode(isChecked));
+        // Set smart defaults
+        binding.productMoqEditText.setText("1");
+        binding.inStockSwitch.setChecked(true);
+
+        // Variant management
+        binding.hasVariantsSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            toggleVariantMode(isChecked);
+            if (isChecked) {
+                updateProgressSteps(3);
+            }
+        });
         toggleVariantMode(false);
 
+        // IMPORTANT: In-stock switch does NOT disable other options anymore
+        // User can set backorders and hide settings regardless of stock status
         binding.inStockSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            binding.allowBackordersSwitch.setEnabled(!isChecked);
-            binding.hideWhenOutOfStockSwitch.setEnabled(!isChecked);
-            if (isChecked) {
-                binding.allowBackordersSwitch.setChecked(false);
-                binding.hideWhenOutOfStockSwitch.setChecked(false);
-            }
+            // Do NOT disable the other switches - let user configure them freely
+            // No action needed here - switches remain enabled at all times
         });
 
         setupSpinners();
         setupClickListeners();
         setupDiscountCalculation();
+        setupProgressTracking();
+    }
+
+    private void updateProgressSteps(int currentStep) {
+        View step1 = findViewById(R.id.progress_step_1);
+        View step2 = findViewById(R.id.progress_step_2);
+        View step3 = findViewById(R.id.progress_step_3);
+
+        // Find the parent LinearLayouts and get the TextViews (second child)
+        TextView label1 = null, label2 = null, label3 = null;
+
+        if (step1 != null && step1.getParent() instanceof ViewGroup) {
+            ViewGroup parent1 = (ViewGroup) step1.getParent();
+            if (parent1.getChildCount() > 1 && parent1.getChildAt(1) instanceof TextView) {
+                label1 = (TextView) parent1.getChildAt(1);
+            }
+        }
+
+        if (step2 != null && step2.getParent() instanceof ViewGroup) {
+            ViewGroup parent2 = (ViewGroup) step2.getParent();
+            if (parent2.getChildCount() > 1 && parent2.getChildAt(1) instanceof TextView) {
+                label2 = (TextView) parent2.getChildAt(1);
+            }
+        }
+
+        if (step3 != null && step3.getParent() instanceof ViewGroup) {
+            ViewGroup parent3 = (ViewGroup) step3.getParent();
+            if (parent3.getChildCount() > 1 && parent3.getChildAt(1) instanceof TextView) {
+                label3 = (TextView) parent3.getChildAt(1);
+            }
+        }
+
+        // Reset all
+        if (step1 != null) step1.setBackgroundResource(R.drawable.bg_step_inactive);
+        if (step2 != null) step2.setBackgroundResource(R.drawable.bg_step_inactive);
+        if (step3 != null) step3.setBackgroundResource(R.drawable.bg_step_inactive);
+
+        if (label1 != null) label1.setTextColor(getColor(R.color.text_tertiary));
+        if (label2 != null) label2.setTextColor(getColor(R.color.text_tertiary));
+        if (label3 != null) label3.setTextColor(getColor(R.color.text_tertiary));
+
+        // Activate current and previous steps
+        if (currentStep >= 1 && step1 != null) {
+            step1.setBackgroundResource(R.drawable.bg_step_active);
+            if (label1 != null) label1.setTextColor(getColor(R.color.primary));
+        }
+        if (currentStep >= 2 && step2 != null) {
+            step2.setBackgroundResource(R.drawable.bg_step_active);
+            if (label2 != null) label2.setTextColor(getColor(R.color.primary));
+        }
+        if (currentStep >= 3 && step3 != null) {
+            step3.setBackgroundResource(R.drawable.bg_step_active);
+            if (label3 != null) label3.setTextColor(getColor(R.color.primary));
+        }
+    }
+
+    private void setupProgressTracking() {
+        TextWatcher essentialWatcher = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                checkEssentialsCompletion();
+            }
+        };
+
+        binding.productTitleEditText.addTextChangedListener(essentialWatcher);
+        binding.productPriceEditText.addTextChangedListener(essentialWatcher);
+    }
+
+    private void checkEssentialsCompletion() {
+        String title = binding.productTitleEditText.getText().toString().trim();
+        String price = binding.productPriceEditText.getText().toString().trim();
+
+        if (!title.isEmpty() && !price.isEmpty()) {
+            updateProgressSteps(2);
+
+            if (!selectedMediaUris.isEmpty() || !existingMediaItems.isEmpty()) {
+                updateProgressSteps(3);
+            }
+        }
     }
 
     private void setupClickListeners() {
@@ -194,7 +289,7 @@ public class AddProductActivity extends AppCompatActivity {
         binding.mediaPreviewContainer.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(this);
 
-        // 1. Existing Media (From Firestore)
+        // Existing Media
         for (MediaItem item : existingMediaItems) {
             View previewView = inflater.inflate(R.layout.item_media_preview, binding.mediaPreviewContainer, false);
             ImageView imageView = previewView.findViewById(R.id.preview_image_view);
@@ -205,11 +300,12 @@ public class AddProductActivity extends AppCompatActivity {
             removeButton.setOnClickListener(v -> {
                 existingMediaItems.remove((MediaItem) v.getTag());
                 updateMediaPreview();
+                checkEssentialsCompletion();
             });
             binding.mediaPreviewContainer.addView(previewView);
         }
 
-        // 2. New Media (Local URIs)
+        // New Media
         for (Uri uri : selectedMediaUris) {
             View previewView = inflater.inflate(R.layout.item_media_preview, binding.mediaPreviewContainer, false);
             ImageView imageView = previewView.findViewById(R.id.preview_image_view);
@@ -220,6 +316,7 @@ public class AddProductActivity extends AppCompatActivity {
             removeButton.setOnClickListener(v -> {
                 selectedMediaUris.remove((Uri) v.getTag());
                 updateMediaPreview();
+                checkEssentialsCompletion();
             });
             binding.mediaPreviewContainer.addView(previewView);
         }
@@ -229,8 +326,7 @@ public class AddProductActivity extends AppCompatActivity {
         binding.variantsManagementContainer.setVisibility(hasVariants ? View.VISIBLE : View.GONE);
     }
 
-    // --- FORM LOGIC (Pricing, Slabs, Fields) ---
-
+    // --- FORM LOGIC ---
     private void setupDiscountCalculation() {
         TextWatcher discountWatcher = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -254,14 +350,32 @@ public class AddProductActivity extends AppCompatActivity {
 
                 if (discountedPrice > 0 && originalPrice > 0 && discountedPrice < originalPrice) {
                     double percentage = ((originalPrice - discountedPrice) / originalPrice) * 100;
-                    binding.discountPercentageText.setText(String.format(Locale.US, "(%.0f%% OFF)", percentage));
-                    binding.discountPercentageText.setVisibility(View.VISIBLE);
+                    binding.discountPercentageText.setText(String.format(Locale.US, "%.0f%% OFF", percentage));
+
+                    // Show the CardView parent
+                    View discountCard = (View) binding.discountPercentageText.getParent();
+                    if (discountCard != null) {
+                        discountCard.setVisibility(View.VISIBLE);
+                    }
                 } else {
-                    binding.discountPercentageText.setVisibility(View.GONE);
+                    // Hide the CardView
+                    View discountCard = (View) binding.discountPercentageText.getParent();
+                    if (discountCard != null) {
+                        discountCard.setVisibility(View.GONE);
+                    }
+                }
+            } else {
+                // Hide when fields are empty
+                View discountCard = (View) binding.discountPercentageText.getParent();
+                if (discountCard != null) {
+                    discountCard.setVisibility(View.GONE);
                 }
             }
         } catch (NumberFormatException e) {
-            binding.discountPercentageText.setVisibility(View.GONE);
+            View discountCard = (View) binding.discountPercentageText.getParent();
+            if (discountCard != null) {
+                discountCard.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -371,30 +485,77 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     // --- SAVE LOGIC ---
-
     private void handleSaveProduct() {
+        binding.productTitleEditText.setError(null);
+        binding.productPriceEditText.setError(null);
+
         String title = binding.productTitleEditText.getText().toString().trim();
-        if (!binding.hasVariantsSwitch.isChecked() && binding.productPriceEditText.getText().toString().trim().isEmpty()) {
-            Toast.makeText(this, "Product Title and Price are required for a simple product.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+
         if (title.isEmpty()) {
-            Toast.makeText(this, "Product Title is required.", Toast.LENGTH_SHORT).show();
+            binding.productTitleEditText.setError("Required");
+            binding.productTitleEditText.requestFocus();
+            scrollToView(binding.productTitleEditText);
+            showErrorToast("Product title is required");
             return;
         }
+
+        if (!binding.hasVariantsSwitch.isChecked()) {
+            String priceStr = binding.productPriceEditText.getText().toString().trim();
+            if (priceStr.isEmpty()) {
+                binding.productPriceEditText.setError("Required");
+                binding.productPriceEditText.requestFocus();
+                scrollToView(binding.productPriceEditText);
+                showErrorToast("Price is required");
+                return;
+            }
+
+            try {
+                double price = Double.parseDouble(priceStr);
+                if (price <= 0) {
+                    binding.productPriceEditText.setError("Must be greater than 0");
+                    binding.productPriceEditText.requestFocus();
+                    scrollToView(binding.productPriceEditText);
+                    showErrorToast("Price must be greater than 0");
+                    return;
+                }
+            } catch (NumberFormatException e) {
+                binding.productPriceEditText.setError("Invalid price");
+                binding.productPriceEditText.requestFocus();
+                scrollToView(binding.productPriceEditText);
+                showErrorToast("Please enter a valid price");
+                return;
+            }
+        }
+
         if (existingMediaItems.isEmpty() && selectedMediaUris.isEmpty()) {
-            Toast.makeText(this, "Please select at least one main product image.", Toast.LENGTH_SHORT).show();
+            if (binding.mediaContent.getVisibility() != View.VISIBLE) {
+                binding.mediaContent.setVisibility(View.VISIBLE);
+                binding.mediaArrow.animate().rotation(180).start();
+            }
+            scrollToView(binding.mediaPreviewContainer);
+            showErrorToast("Please add at least one product image");
             return;
         }
+
         setLoading(true);
         collectDataAndInitiateUpload();
+    }
+
+    private void showErrorToast(String message) {
+        Toast.makeText(this, "✗ " + message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void scrollToView(View view) {
+        binding.mainScrollView.post(() -> {
+            int scrollY = view.getTop() - 100;
+            binding.mainScrollView.smoothScrollTo(0, scrollY);
+        });
     }
 
     private void collectDataAndInitiateUpload() {
         GoogleSignInAccount account = SessionManager.getInstance().getAccount();
         String userId = (account != null) ? account.getId() : "";
         if (userId == null || userId.isEmpty()) {
-            // Fallback just in case session manager is empty but auth is valid
             if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
                 userId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
             } else {
@@ -407,7 +568,6 @@ public class AddProductActivity extends AppCompatActivity {
         product.setUserId(userId);
         product.setCatalogueId(catalogueId);
 
-        // 1. Basic Info
         product.setTitle(binding.productTitleEditText.getText().toString().trim());
         product.setDescription(binding.productDescriptionEditText.getText().toString().trim());
         product.setSku(binding.productSkuEditText.getText().toString().trim());
@@ -423,8 +583,9 @@ public class AddProductActivity extends AppCompatActivity {
             String discountStr = binding.productDiscountPriceEditText.getText().toString().trim();
             product.setDiscountedPrice(discountStr.isEmpty() ? 0.0 : Double.parseDouble(discountStr));
 
+            // IMPORTANT: Use -1 as default quantity if user doesn't enter anything
             String qtyStr = binding.quantityEditText.getText().toString().trim();
-            product.setAvailableQuantity(qtyStr.isEmpty() ? 0 : Integer.parseInt(qtyStr));
+            product.setAvailableQuantity(qtyStr.isEmpty() ? DEFAULT_QUANTITY : Integer.parseInt(qtyStr));
 
             String moqStr = binding.productMoqEditText.getText().toString().trim();
             product.setMinOrderQty(moqStr.isEmpty() ? 1 : Integer.parseInt(moqStr));
@@ -437,7 +598,6 @@ public class AddProductActivity extends AppCompatActivity {
             product.setTags(Arrays.asList(tagsStr.split("\\s*,\\s*")));
         }
 
-        // 2. Variants
         boolean hasVariants = binding.hasVariantsSwitch.isChecked();
         product.setHasVariants(hasVariants);
 
@@ -468,9 +628,9 @@ public class AddProductActivity extends AppCompatActivity {
 
                 Object imageTag = variantImage.getTag();
                 if (imageTag instanceof Uri) {
-                    variant.setBarcode(((Uri) imageTag).toString()); // Temporary storage
+                    variant.setBarcode(((Uri) imageTag).toString());
                 } else if (imageTag instanceof String) {
-                    variant.setImageUrl((String) imageTag); // Existing URL
+                    variant.setImageUrl((String) imageTag);
                 }
 
                 try {
@@ -479,17 +639,22 @@ public class AddProductActivity extends AppCompatActivity {
 
                     variant.setSkuOverride(skuOverrideEt.getText().toString().trim());
 
+                    // IMPORTANT: Use -1 as default variant quantity if user doesn't enter anything
                     String vQtyStr = quantityEt.getText().toString().trim();
-                    int vQty = vQtyStr.isEmpty() ? 0 : Integer.parseInt(vQtyStr);
+                    int vQty = vQtyStr.isEmpty() ? DEFAULT_QUANTITY : Integer.parseInt(vQtyStr);
                     variant.setQuantity(vQty);
+                    // Stock status based on quantity: -1 means not set, 0 means out of stock, >0 means in stock
                     variant.setInStock(vQty > 0);
-                } catch (Exception e) { continue; }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parsing variant data", e);
+                    continue;
+                }
                 generatedVariants.add(variant);
             }
             product.setVariants(generatedVariants);
         }
 
-        // 3. Other Data
+        // IMPORTANT: These switches are now always enabled, user controls them independently
         product.setAllowBackorders(binding.allowBackordersSwitch.isChecked());
         product.setHideWhenOutOfStock(binding.hideWhenOutOfStockSwitch.isChecked());
 
@@ -533,27 +698,22 @@ public class AddProductActivity extends AppCompatActivity {
         }
         product.setCustomFields(customFields);
 
-        // 4. Start Upload
         uploadAllMediaAndSaveProduct(product);
     }
-
-    // --- CLOUDINARY UPLOAD LOGIC ---
 
     private void uploadAllMediaAndSaveProduct(Product product) {
         Map<Uri, Object> uploadsToPerform = new HashMap<>();
 
-        // 1. Queue Main Product Media
         for (Uri uri : selectedMediaUris) {
             uploadsToPerform.put(uri, "main_media");
         }
 
-        // 2. Queue Variant Images
         if (product.isHasVariants() && product.getVariants() != null) {
             for (ProductVariant variant : product.getVariants()) {
                 if (variant.getBarcode() != null && variant.getBarcode().startsWith("content://")) {
                     Uri variantUri = Uri.parse(variant.getBarcode());
                     uploadsToPerform.put(variantUri, variant);
-                    variant.setBarcode(null); // Clear temp
+                    variant.setBarcode(null);
                 }
             }
         }
@@ -564,7 +724,6 @@ public class AddProductActivity extends AppCompatActivity {
             return;
         }
 
-        // 3. Upload Queue
         List<MediaItem> newlyUploadedMedia = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger uploadCounter = new AtomicInteger(uploadsToPerform.size());
         final boolean[] errorOccurred = {false};
@@ -604,11 +763,10 @@ public class AddProductActivity extends AppCompatActivity {
         }
     }
 
-    // NEW CLOUDINARY UPLOAD METHOD
     private void uploadSingleFile(final Uri uri, final MediaUploadCallback callback) {
         MediaManager.get().upload(uri)
-                .unsigned("easysell_preset") // Using your preset name
-                .option("resource_type", "auto") // Detects image vs video
+                .unsigned("easysell_preset")
+                .option("resource_type", "auto")
                 .callback(new UploadCallback() {
                     @Override
                     public void onStart(String requestId) {}
@@ -618,7 +776,7 @@ public class AddProductActivity extends AppCompatActivity {
 
                     @Override
                     public void onSuccess(String requestId, Map resultData) {
-                        String url = (String) resultData.get("secure_url"); // Use HTTPS url
+                        String url = (String) resultData.get("secure_url");
                         String type = (String) resultData.get("resource_type");
                         MediaItem item = new MediaItem(url, type);
                         callback.onSuccess(item);
@@ -639,21 +797,19 @@ public class AddProductActivity extends AppCompatActivity {
         if (productIdToEdit != null) {
             db.collection("products").document(productIdToEdit).set(product)
                     .addOnSuccessListener(aVoid -> handler.post(() -> {
-                        Toast.makeText(this, "Product Updated!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "✓ Product updated successfully!", Toast.LENGTH_SHORT).show();
                         finish();
                     }))
                     .addOnFailureListener(e -> showError("Failed to update: " + e.getMessage()));
         } else {
             db.collection("products").add(product)
                     .addOnSuccessListener(doc -> handler.post(() -> {
-                        Toast.makeText(this, "Product Saved!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "✓ Product saved successfully!", Toast.LENGTH_SHORT).show();
                         finish();
                     }))
                     .addOnFailureListener(e -> showError("Failed to save: " + e.getMessage()));
         }
     }
-
-    // --- HELPER METHODS ---
 
     interface MediaUploadCallback {
         void onSuccess(MediaItem mediaItem);
@@ -669,12 +825,20 @@ public class AddProductActivity extends AppCompatActivity {
 
     private void setLoading(boolean isLoading) {
         handler.post(() -> {
-            binding.progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            binding.buttonSaveProduct.setVisibility(isLoading ? View.INVISIBLE : View.VISIBLE);
+            if (isLoading) {
+                binding.progressBar.setVisibility(View.VISIBLE);
+                binding.buttonSaveProduct.setEnabled(false);
+                binding.buttonSaveProduct.setAlpha(0.6f);
+                binding.buttonSaveProduct.setText("Saving...");
+            } else {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.buttonSaveProduct.setEnabled(true);
+                binding.buttonSaveProduct.setAlpha(1.0f);
+                binding.buttonSaveProduct.setText("Save Product");
+            }
         });
     }
 
-    // --- POPULATE FOR EDIT ---
     private void fetchAndPopulateProductData(String productId) {
         setLoading(true);
         db.collection("products").document(productId).get()
@@ -728,11 +892,21 @@ public class AddProductActivity extends AppCompatActivity {
         }
 
         binding.inStockSwitch.setChecked(product.isInStock());
-        binding.quantityEditText.setText(String.valueOf(product.getAvailableQuantity()));
+
+        // Handle -1 quantity: show empty field instead of "-1"
+        int availableQty = product.getAvailableQuantity();
+        if (availableQty == DEFAULT_QUANTITY) {
+            binding.quantityEditText.setText(""); // Show empty for -1
+        } else {
+            binding.quantityEditText.setText(String.valueOf(availableQty));
+        }
+
         binding.allowBackordersSwitch.setChecked(product.isAllowBackorders());
         binding.hideWhenOutOfStockSwitch.setChecked(product.isHideWhenOutOfStock());
-        binding.allowBackordersSwitch.setEnabled(!product.isInStock());
-        binding.hideWhenOutOfStockSwitch.setEnabled(!product.isInStock());
+
+        // IMPORTANT: Switches are ALWAYS enabled now - no disabling based on stock status
+        binding.allowBackordersSwitch.setEnabled(true);
+        binding.hideWhenOutOfStockSwitch.setEnabled(true);
 
         binding.taxRateEditText.setText(String.format(Locale.US, "%.1f", product.getTaxRate()));
         binding.weightEditText.setText(String.format(Locale.US, "%.2f", product.getWeight()));
@@ -817,7 +991,14 @@ public class AddProductActivity extends AppCompatActivity {
 
             priceModifierEt.setText(String.format(Locale.US, "%.2f", variant.getPriceModifier()));
             skuOverrideEt.setText(variant.getSkuOverride());
-            quantityEt.setText(String.valueOf(variant.getQuantity()));
+
+            // Handle -1 quantity: show empty field instead of "-1"
+            int variantQty = variant.getQuantity();
+            if (variantQty == DEFAULT_QUANTITY) {
+                quantityEt.setText(""); // Show empty for -1
+            } else {
+                quantityEt.setText(String.valueOf(variantQty));
+            }
 
             if (variant.getImageUrl() != null && !variant.getImageUrl().isEmpty()) {
                 Glide.with(this).load(variant.getImageUrl()).placeholder(R.drawable.ic_add_photo).into(variantImage);

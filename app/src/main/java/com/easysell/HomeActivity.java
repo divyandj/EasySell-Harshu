@@ -27,8 +27,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
-import com.google.firebase.messaging.FirebaseMessaging; // REQUIRED
-
+import com.google.firebase.messaging.FirebaseMessaging; // REQUIRED FOR NOTIFICATIONS
+import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -165,6 +165,61 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         });
     }
 
+    private void updateProfileUI(GoogleSignInAccount account) {
+        if (account == null) return;
+
+        // Fetch the latest data from Firestore (Matches ProfileActivity logic)
+        db.collection("users").document(account.getId()).get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        // 1. Get Name (Try Business Name -> Owner Name -> Google Name)
+                        String businessName = document.getString("businessName");
+                        String ownerName = document.getString("ownerName");
+                        String googleName = account.getDisplayName();
+
+                        if (businessName != null && !businessName.isEmpty()) {
+                            binding.profileName.setText(businessName);
+                        } else if (ownerName != null && !ownerName.isEmpty()) {
+                            binding.profileName.setText(ownerName);
+                        } else {
+                            binding.profileName.setText(googleName != null ? googleName : "Seller");
+                        }
+
+                        // 2. Get Profile Image (Try Firestore URL -> Google URL)
+                        String firestoreUrl = document.getString("profileImageUrl");
+
+                        if (firestoreUrl != null && !firestoreUrl.isEmpty()) {
+                            loadProfileImage(firestoreUrl);
+                        } else if (account.getPhotoUrl() != null) {
+                            loadProfileImage(account.getPhotoUrl().toString());
+                        }
+                    } else {
+                        // First time login or no profile set yet, use Google defaults
+                        binding.profileName.setText(account.getDisplayName());
+                        if (account.getPhotoUrl() != null) {
+                            loadProfileImage(account.getPhotoUrl().toString());
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    // If fetch fails, fall back to Google defaults
+                    Log.e(TAG, "Failed to fetch profile", e);
+                    binding.profileName.setText(account.getDisplayName());
+                });
+    }
+
+    // Helper to load image with clean styling
+    private void loadProfileImage(String url) {
+        // Remove tint and padding so the image looks like a proper photo
+        binding.profileIcon.setImageTintList(null);
+        binding.profileIcon.setPadding(0, 0, 0, 0);
+
+        Glide.with(this)
+                .load(url)
+                .circleCrop()
+                .placeholder(R.drawable.ic_person)
+                .into(binding.profileIcon);
+    }
     @Override
     protected void onStart() {
         super.onStart();
@@ -175,6 +230,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             signOutAndGoToLogin();
         } else {
             Log.d(TAG, "User " + currentAccount.getEmail() + " signed in. Loading data.");
+
+            updateProfileUI(currentAccount);
             // Attach all listeners to fetch live data
             attachCatalogueListener();
             attachOrderCountListener();
