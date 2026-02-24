@@ -17,8 +17,8 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.easysell.databinding.ActivityAddCatalogueBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.Map;
@@ -42,8 +42,7 @@ public class AddCatalogueActivity extends AppCompatActivity {
                             .centerCrop()
                             .into(binding.catalogueImagePreview);
                 }
-            }
-    );
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,13 +127,13 @@ public class AddCatalogueActivity extends AppCompatActivity {
     }
 
     private void saveCatalogueToFirestore(String name, String imageUrl) {
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account == null || account.getId() == null) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
             showError("User not signed in!");
             return;
         }
 
-        String userId = account.getId();
+        String userId = user.getUid();
 
         // Use the updated Model constructor
         Catalogue newCatalogue = new Catalogue(name, userId, imageUrl);

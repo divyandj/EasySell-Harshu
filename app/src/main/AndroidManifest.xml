@@ -42,6 +42,9 @@
             android:name=".OrdersActivity"
             android:exported="false" />
         <activity
+            android:name=".SignUpActivity"
+            android:exported="false" />
+        <activity
             android:name=".FullScreenImageActivity"
             android:exported="false" />
         <activity

@@ -215,6 +215,24 @@
                     app:icon="@drawable/ic_edit"
                     app:iconGravity="textStart"
                     app:cornerRadius="@dimen/radius_md" />
+
+                <!-- Delete button with error color (Icon-only) -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_delete_product"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing_sm"
+                    android:minWidth="48dp"
+                    android:minHeight="48dp"
+                    android:padding="0dp"
+                    app:iconPadding="0dp"
+                    app:icon="@drawable/ic_delete"
+                    app:iconTint="@color/error"
+                    app:iconGravity="textStart"
+                    app:cornerRadius="@dimen/radius_md"
+                    app:strokeColor="@color/error"
+                    app:strokeWidth="1.5dp" />
             </LinearLayout>
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

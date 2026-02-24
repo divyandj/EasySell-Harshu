@@ -30,6 +30,7 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
     private List<Product> productList;
     private String catalogueId;
     private String catalogueName;
+    private String storeHandle;
     private ListenerRegistration productListener;
 
     @Override
@@ -40,6 +41,11 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
 
         catalogueId = getIntent().getStringExtra("CATALOGUE_ID");
         catalogueName = getIntent().getStringExtra("CATALOGUE_NAME");
+        storeHandle = getIntent().getStringExtra("STORE_HANDLE");
+
+        if (storeHandle == null) {
+            storeHandle = "";
+        }
 
         if (catalogueId == null) {
             Toast.makeText(this, "Error: Catalogue ID missing.", Toast.LENGTH_SHORT).show();
@@ -131,14 +137,19 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
 
     // --- SHARE FEATURE ---
     private void shareCatalogue() {
-        if (catalogueId == null) return;
+        if (catalogueId == null)
+            return;
 
-        String deepLink = "https://easy-sell-web.vercel.app/catalogue/" + catalogueId;
+        if (storeHandle == null || storeHandle.isEmpty()) {
+            Toast.makeText(this, "Please set your Store Link Prefix in Profile to share.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        String deepLink = "https://" + storeHandle + ".mmproperty.in/catalogue/" + catalogueId;
         String messageBody = String.format(
                 "Check out my catalogue \"%s\" on Easy Sell!\n\nBrowse my products here:\n%s",
                 catalogueName != null ? catalogueName : "My Store",
-                deepLink
-        );
+                deepLink);
 
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
@@ -154,10 +165,16 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
 
     // --- PREVIEW FEATURE (Opens in Browser) ---
     private void previewCatalogue() {
-        if (catalogueId == null) return;
+        if (catalogueId == null)
+            return;
+
+        if (storeHandle == null || storeHandle.isEmpty()) {
+            Toast.makeText(this, "Please set your Store Link Prefix in Profile to preview.", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         // The URL to open
-        String url = "https://easy-sell-web.vercel.app/catalogue/" + catalogueId;
+        String url = "https://" + storeHandle + ".mmproperty.in/catalogue/" + catalogueId;
 
         try {
             // Create an Intent to view the URL
@@ -200,6 +217,29 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
                     Log.e(TAG, "Error updating visibility", e);
                     Toast.makeText(this, "Failed to update visibility", Toast.LENGTH_SHORT).show();
                 });
+    }
+
+    @Override
+    public void onDeleteClick(Product product) {
+        showDeleteProductConfirmation(product);
+    }
+
+    private void showDeleteProductConfirmation(Product product) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Delete Product")
+                .setMessage(
+                        "Are you sure you want to delete '" + product.getTitle() + "'? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    db.collection("products").document(product.getId()).delete()
+                            .addOnSuccessListener(
+                                    aVoid -> Toast.makeText(this, "Product deleted", Toast.LENGTH_SHORT).show())
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "Error deleting product", e);
+                                Toast.makeText(this, "Failed to delete product", Toast.LENGTH_SHORT).show();
+                            });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     @Override

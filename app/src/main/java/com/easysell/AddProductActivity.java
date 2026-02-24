@@ -27,7 +27,8 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.easysell.databinding.ActivityAddProductBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -74,8 +75,7 @@ public class AddProductActivity extends AppCompatActivity {
                     updateMediaPreview();
                     checkEssentialsCompletion();
                 }
-            }
-    );
+            });
 
     private final ActivityResultLauncher<String> variantImagePickerLauncher = registerForActivityResult(
             new ActivityResultContracts.GetContent(),
@@ -85,8 +85,7 @@ public class AddProductActivity extends AppCompatActivity {
                     targetVariantImageView.setTag(uri);
                     targetVariantImageView = null;
                 }
-            }
-    );
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -198,33 +197,48 @@ public class AddProductActivity extends AppCompatActivity {
         }
 
         // Reset all
-        if (step1 != null) step1.setBackgroundResource(R.drawable.bg_step_inactive);
-        if (step2 != null) step2.setBackgroundResource(R.drawable.bg_step_inactive);
-        if (step3 != null) step3.setBackgroundResource(R.drawable.bg_step_inactive);
+        if (step1 != null)
+            step1.setBackgroundResource(R.drawable.bg_step_inactive);
+        if (step2 != null)
+            step2.setBackgroundResource(R.drawable.bg_step_inactive);
+        if (step3 != null)
+            step3.setBackgroundResource(R.drawable.bg_step_inactive);
 
-        if (label1 != null) label1.setTextColor(getColor(R.color.text_tertiary));
-        if (label2 != null) label2.setTextColor(getColor(R.color.text_tertiary));
-        if (label3 != null) label3.setTextColor(getColor(R.color.text_tertiary));
+        if (label1 != null)
+            label1.setTextColor(getColor(R.color.text_tertiary));
+        if (label2 != null)
+            label2.setTextColor(getColor(R.color.text_tertiary));
+        if (label3 != null)
+            label3.setTextColor(getColor(R.color.text_tertiary));
 
         // Activate current and previous steps
         if (currentStep >= 1 && step1 != null) {
             step1.setBackgroundResource(R.drawable.bg_step_active);
-            if (label1 != null) label1.setTextColor(getColor(R.color.primary));
+            if (label1 != null)
+                label1.setTextColor(getColor(R.color.primary));
         }
         if (currentStep >= 2 && step2 != null) {
             step2.setBackgroundResource(R.drawable.bg_step_active);
-            if (label2 != null) label2.setTextColor(getColor(R.color.primary));
+            if (label2 != null)
+                label2.setTextColor(getColor(R.color.primary));
         }
         if (currentStep >= 3 && step3 != null) {
             step3.setBackgroundResource(R.drawable.bg_step_active);
-            if (label3 != null) label3.setTextColor(getColor(R.color.primary));
+            if (label3 != null)
+                label3.setTextColor(getColor(R.color.primary));
         }
     }
 
     private void setupProgressTracking() {
         TextWatcher essentialWatcher = new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
             @Override
             public void afterTextChanged(Editable s) {
                 checkEssentialsCompletion();
@@ -280,7 +294,7 @@ public class AddProductActivity extends AppCompatActivity {
     private void openMediaPicker() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"image/*", "video/*"});
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/*", "video/*" });
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         mediaPickerLauncher.launch(Intent.createChooser(intent, "Select Media"));
     }
@@ -329,9 +343,16 @@ public class AddProductActivity extends AppCompatActivity {
     // --- FORM LOGIC ---
     private void setupDiscountCalculation() {
         TextWatcher discountWatcher = new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            @Override public void afterTextChanged(Editable s) {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
                 calculateAndShowDiscount();
             }
         };
@@ -403,8 +424,10 @@ public class AddProductActivity extends AppCompatActivity {
         EditText fieldValue = rowView.findViewById(R.id.custom_field_value_edit_text);
         View removeButton = rowView.findViewById(R.id.button_remove_custom_field);
 
-        if (key != null) fieldKey.setText(key);
-        if (value != null) fieldValue.setText(value);
+        if (key != null)
+            fieldKey.setText(key);
+        if (value != null)
+            fieldValue.setText(value);
         removeButton.setOnClickListener(v -> binding.customFieldsContainer.removeView(rowView));
         binding.customFieldsContainer.addView(rowView);
     }
@@ -444,7 +467,7 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void generateCombinationsRecursive(Map<String, List<String>> options, List<String> keys, int index,
-                                               Map<String, String> current, List<Map<String, String>> result) {
+            Map<String, String> current, List<Map<String, String>> result) {
         if (index == keys.size()) {
             result.add(new HashMap<>(current));
             return;
@@ -460,7 +483,8 @@ public class AddProductActivity extends AppCompatActivity {
 
     private void addGeneratedVariantRow(Map<String, String> combination) {
         LayoutInflater inflater = LayoutInflater.from(this);
-        View rowView = inflater.inflate(R.layout.layout_generated_variant_row, binding.generatedVariantsContainer, false);
+        View rowView = inflater.inflate(R.layout.layout_generated_variant_row, binding.generatedVariantsContainer,
+                false);
 
         TextView name = rowView.findViewById(R.id.variant_name_text);
         ImageView variantImage = rowView.findViewById(R.id.variant_image);
@@ -469,7 +493,8 @@ public class AddProductActivity extends AppCompatActivity {
 
         StringBuilder comboName = new StringBuilder();
         for (String value : combination.values()) {
-            if (comboName.length() > 0) comboName.append(" / ");
+            if (comboName.length() > 0)
+                comboName.append(" / ");
             comboName.append(value);
         }
         name.setText(comboName.toString());
@@ -553,16 +578,12 @@ public class AddProductActivity extends AppCompatActivity {
     }
 
     private void collectDataAndInitiateUpload() {
-        GoogleSignInAccount account = SessionManager.getInstance().getAccount();
-        String userId = (account != null) ? account.getId() : "";
-        if (userId == null || userId.isEmpty()) {
-            if (com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser() != null) {
-                userId = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser().getUid();
-            } else {
-                showError("User session expired. Please sign in again.");
-                return;
-            }
+        FirebaseUser user = com.google.firebase.auth.FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            showError("User session expired. Please sign in again.");
+            return;
         }
+        String userId = user.getUid();
 
         Product product = new Product();
         product.setUserId(userId);
@@ -643,7 +664,8 @@ public class AddProductActivity extends AppCompatActivity {
                     String vQtyStr = quantityEt.getText().toString().trim();
                     int vQty = vQtyStr.isEmpty() ? DEFAULT_QUANTITY : Integer.parseInt(vQtyStr);
                     variant.setQuantity(vQty);
-                    // Stock status based on quantity: -1 means not set, 0 means out of stock, >0 means in stock
+                    // Stock status based on quantity: -1 means not set, 0 means out of stock, >0
+                    // means in stock
                     variant.setInStock(vQty > 0);
                 } catch (Exception e) {
                     Log.e(TAG, "Error parsing variant data", e);
@@ -654,7 +676,8 @@ public class AddProductActivity extends AppCompatActivity {
             product.setVariants(generatedVariants);
         }
 
-        // IMPORTANT: These switches are now always enabled, user controls them independently
+        // IMPORTANT: These switches are now always enabled, user controls them
+        // independently
         product.setAllowBackorders(binding.allowBackordersSwitch.isChecked());
         product.setHideWhenOutOfStock(binding.hideWhenOutOfStockSwitch.isChecked());
 
@@ -664,7 +687,8 @@ public class AddProductActivity extends AppCompatActivity {
 
             String wStr = binding.weightEditText.getText().toString().trim();
             product.setWeight(wStr.isEmpty() ? 0.0 : Double.parseDouble(wStr));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
 
         if (binding.weightUnitSpinner.getSelectedItem() != null) {
             product.setWeightUnit(binding.weightUnitSpinner.getSelectedItem().toString());
@@ -683,7 +707,8 @@ public class AddProductActivity extends AppCompatActivity {
                 if (start > 0 && end > 0 && price > 0) {
                     bulkDiscounts.add(new PriceSlab(start, end, price));
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
         }
         product.setBulkDiscounts(bulkDiscounts);
 
@@ -694,7 +719,8 @@ public class AddProductActivity extends AppCompatActivity {
             EditText fieldValue = rowView.findViewById(R.id.custom_field_value_edit_text);
             String key = fieldKey.getText().toString().trim();
             String value = fieldValue.getText().toString().trim();
-            if (!key.isEmpty()) customFields.put(key, value);
+            if (!key.isEmpty())
+                customFields.put(key, value);
         }
         product.setCustomFields(customFields);
 
@@ -726,7 +752,7 @@ public class AddProductActivity extends AppCompatActivity {
 
         List<MediaItem> newlyUploadedMedia = Collections.synchronizedList(new ArrayList<>());
         AtomicInteger uploadCounter = new AtomicInteger(uploadsToPerform.size());
-        final boolean[] errorOccurred = {false};
+        final boolean[] errorOccurred = { false };
 
         for (Map.Entry<Uri, Object> entry : uploadsToPerform.entrySet()) {
             Uri uriToUpload = entry.getKey();
@@ -769,10 +795,12 @@ public class AddProductActivity extends AppCompatActivity {
                 .option("resource_type", "auto")
                 .callback(new UploadCallback() {
                     @Override
-                    public void onStart(String requestId) {}
+                    public void onStart(String requestId) {
+                    }
 
                     @Override
-                    public void onProgress(String requestId, long bytes, long totalBytes) {}
+                    public void onProgress(String requestId, long bytes, long totalBytes) {
+                    }
 
                     @Override
                     public void onSuccess(String requestId, Map resultData) {
@@ -788,7 +816,8 @@ public class AddProductActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onReschedule(String requestId, ErrorInfo error) {}
+                    public void onReschedule(String requestId, ErrorInfo error) {
+                    }
                 })
                 .dispatch();
     }
@@ -813,6 +842,7 @@ public class AddProductActivity extends AppCompatActivity {
 
     interface MediaUploadCallback {
         void onSuccess(MediaItem mediaItem);
+
         void onFailure(String message);
     }
 
@@ -904,7 +934,8 @@ public class AddProductActivity extends AppCompatActivity {
         binding.allowBackordersSwitch.setChecked(product.isAllowBackorders());
         binding.hideWhenOutOfStockSwitch.setChecked(product.isHideWhenOutOfStock());
 
-        // IMPORTANT: Switches are ALWAYS enabled now - no disabling based on stock status
+        // IMPORTANT: Switches are ALWAYS enabled now - no disabling based on stock
+        // status
         binding.allowBackordersSwitch.setEnabled(true);
         binding.hideWhenOutOfStockSwitch.setEnabled(true);
 
@@ -965,14 +996,17 @@ public class AddProductActivity extends AppCompatActivity {
 
     private void generateAndDisplayVariantsForEdit(List<ProductVariant> existingVariants) {
         binding.generatedVariantsContainer.removeAllViews();
-        if (existingVariants == null) return;
+        if (existingVariants == null)
+            return;
 
         for (ProductVariant variant : existingVariants) {
             Map<String, String> combination = variant.getOptions();
-            if (combination == null) continue;
+            if (combination == null)
+                continue;
 
             LayoutInflater inflater = LayoutInflater.from(this);
-            View rowView = inflater.inflate(R.layout.layout_generated_variant_row, binding.generatedVariantsContainer, false);
+            View rowView = inflater.inflate(R.layout.layout_generated_variant_row, binding.generatedVariantsContainer,
+                    false);
 
             TextView name = rowView.findViewById(R.id.variant_name_text);
             ImageView variantImage = rowView.findViewById(R.id.variant_image);
@@ -984,7 +1018,8 @@ public class AddProductActivity extends AppCompatActivity {
 
             StringBuilder comboName = new StringBuilder();
             for (String value : combination.values()) {
-                if (comboName.length() > 0) comboName.append(" / ");
+                if (comboName.length() > 0)
+                    comboName.append(" / ");
                 comboName.append(value);
             }
             name.setText(comboName.toString());

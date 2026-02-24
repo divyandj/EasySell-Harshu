@@ -19,8 +19,8 @@ import com.cloudinary.android.MediaManager;
 import com.cloudinary.android.callback.ErrorInfo;
 import com.cloudinary.android.callback.UploadCallback;
 import com.easysell.databinding.ActivityEditProfileBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
@@ -53,9 +53,9 @@ public class EditProfileActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         // 1. Get User ID
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null) {
-            userId = account.getId();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            userId = user.getUid();
         } else {
             Toast.makeText(this, "User not identified.", Toast.LENGTH_SHORT).show();
             finish();
@@ -120,6 +120,7 @@ public class EditProfileActivity extends AppCompatActivity {
                     if (document.exists()) {
                         // Populate Text Fields
                         binding.etBusinessName.setText(document.getString("businessName"));
+                        binding.etStoreHandle.setText(document.getString("storeHandle"));
                         binding.etOwnerName.setText(document.getString("ownerName"));
                         binding.etPhone.setText(document.getString("phone"));
                         binding.etGst.setText(document.getString("gstin"));
@@ -148,8 +149,15 @@ public class EditProfileActivity extends AppCompatActivity {
 
     private void startSaveProcess() {
         String businessName = binding.etBusinessName.getText().toString().trim();
+        String storeHandle = binding.etStoreHandle.getText().toString().trim();
+
         if (businessName.isEmpty()) {
             Toast.makeText(this, "Business Name is required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (storeHandle.isEmpty()) {
+            Toast.makeText(this, "Store Link Prefix is required", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -205,6 +213,7 @@ public class EditProfileActivity extends AppCompatActivity {
 
     interface OnUploadResult {
         void onSuccess(String url);
+
         void onFailure(String error);
     }
 
@@ -250,14 +259,17 @@ public class EditProfileActivity extends AppCompatActivity {
 
         Map<String, Object> data = new HashMap<>();
         data.put("businessName", binding.etBusinessName.getText().toString().trim());
+        data.put("storeHandle", binding.etStoreHandle.getText().toString().trim().toLowerCase());
         data.put("ownerName", binding.etOwnerName.getText().toString().trim());
         data.put("phone", binding.etPhone.getText().toString().trim());
         data.put("gstin", binding.etGst.getText().toString().trim());
         data.put("address", binding.etAddress.getText().toString().trim());
 
         // Save URLs
-        if (logoUrl != null) data.put("profileImageUrl", logoUrl);
-        if (signatureUrl != null) data.put("signatureImageUrl", signatureUrl);
+        if (logoUrl != null)
+            data.put("profileImageUrl", logoUrl);
+        if (signatureUrl != null)
+            data.put("signatureImageUrl", signatureUrl);
 
         db.collection("users").document(userId).set(data)
                 .addOnSuccessListener(aVoid -> handler.post(() -> {

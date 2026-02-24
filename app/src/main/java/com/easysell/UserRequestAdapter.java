@@ -24,6 +24,7 @@ public class UserRequestAdapter extends RecyclerView.Adapter<UserRequestAdapter.
 
     public interface OnRequestActionListener {
         void onApprove(UserRequest request);
+
         void onReject(UserRequest request);
     }
 
@@ -77,7 +78,7 @@ public class UserRequestAdapter extends RecyclerView.Adapter<UserRequestAdapter.
         public void bind(UserRequest request, OnRequestActionListener listener, String currentStatus) {
             // --- DATA BINDING ---
             name.setText(request.getDisplayName() != null ? request.getDisplayName() : "Unknown User");
-            type.setText(request.getUserType() != null ? request.getUserType().toUpperCase() : "USER");
+            type.setText("BUYER");
             email.setText(request.getEmail() != null ? request.getEmail() : "N/A");
             phone.setText(request.getPhoneNumber() != null ? request.getPhoneNumber() : "N/A");
             gst.setText(request.getGstPan() != null ? request.getGstPan() : "N/A");

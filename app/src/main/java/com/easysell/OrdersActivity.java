@@ -13,8 +13,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.easysell.databinding.ActivityOrdersBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -51,13 +51,13 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
 
         db = FirebaseFirestore.getInstance();
 
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account == null || account.getId() == null) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
             Toast.makeText(this, "User not signed in.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
-        currentSellerId = account.getId();
+        currentSellerId = user.getUid();
 
         setupRecyclerView();
         setupTabs();
@@ -79,9 +79,12 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
         });
     }
 
@@ -98,7 +101,8 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
     }
 
     private void attachOrdersListener() {
-        if (currentSellerId == null) return;
+        if (currentSellerId == null)
+            return;
 
         detachOrdersListener(); // Remove old listener before adding new one
 
@@ -121,7 +125,7 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
         ordersListener = query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot snapshots,
-                                @Nullable FirebaseFirestoreException e) {
+                    @Nullable FirebaseFirestoreException e) {
                 binding.progressBarOrders.setVisibility(View.GONE);
 
                 if (e != null) {
@@ -129,7 +133,8 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
                     // Handle Missing Index
                     if (e.getCode() == FirebaseFirestoreException.Code.FAILED_PRECONDITION) {
                         Log.e(TAG, "INDEX MISSING: Check Logcat for link.");
-                        Toast.makeText(OrdersActivity.this, "Setup required: Check logs for Index link.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(OrdersActivity.this, "Setup required: Check logs for Index link.",
+                                Toast.LENGTH_LONG).show();
                     }
                     binding.emptyOrdersView.setVisibility(View.VISIBLE);
                     binding.emptyText.setText("Error loading orders");
@@ -142,13 +147,14 @@ public class OrdersActivity extends AppCompatActivity implements OrderAdapter.On
                         // Manually set ID as it's not in the document fields usually
                         // Assuming you need document ID for clicks
                         int index = orderList.size();
-                        // Note: snapshots.getDocuments().get(index).getId() is risky if list size mismatches loop
+                        // Note: snapshots.getDocuments().get(index).getId() is risky if list size
+                        // mismatches loop
                         // Better:
                     }
                     // Safer loop:
-                    for (int i=0; i<snapshots.size(); i++) {
+                    for (int i = 0; i < snapshots.size(); i++) {
                         Order order = snapshots.getDocuments().get(i).toObject(Order.class);
-                        if(order != null) {
+                        if (order != null) {
                             order.setId(snapshots.getDocuments().get(i).getId());
                             orderList.add(order);
                         }

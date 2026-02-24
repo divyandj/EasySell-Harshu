@@ -16,9 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
 import com.easysell.databinding.ActivityProfileBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -30,8 +29,9 @@ public class ProfileActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private String userId;
     private SharedPreferences prefs;
+    private String currentStoreHandle = "";
 
-    // TOPIC NAMES (Must match backend)
+    // TOPIC NAMES (Base topics, actual topics append "_" + storeHandle)
     private static final String TOPIC_ORDERS = "admin_orders";
     private static final String TOPIC_USERS = "admin_new_users";
 
@@ -45,11 +45,9 @@ public class ProfileActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         // 2. Identify User
-        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null) {
-            userId = account.getId();
-        } else if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            userId = user.getUid();
         } else {
             Toast.makeText(this, "User not identified. Please login.", Toast.LENGTH_SHORT).show();
             finish();
@@ -107,8 +105,19 @@ public class ProfileActivity extends AppCompatActivity {
         String phone = doc.getString("phone");
         String gst = doc.getString("gstin");
         String address = doc.getString("address");
+        String handle = doc.getString("storeHandle");
 
-        binding.tvBusinessNameHeader.setText(businessName != null && !businessName.isEmpty() ? businessName : "Business Name");
+        if (handle != null && !handle.isEmpty()) {
+            currentStoreHandle = handle;
+            binding.tvStoreHandleHeader.setText("@" + handle);
+            binding.tvStoreHandleHeader.setVisibility(View.VISIBLE);
+        } else {
+            currentStoreHandle = "";
+            binding.tvStoreHandleHeader.setVisibility(View.GONE);
+        }
+
+        binding.tvBusinessNameHeader
+                .setText(businessName != null && !businessName.isEmpty() ? businessName : "Business Name");
         binding.tvOwnerNameHeader.setText(ownerName != null && !ownerName.isEmpty() ? ownerName : "Owner Name");
 
         binding.tvPhoneView.setText(phone != null && !phone.isEmpty() ? phone : "Phone Not Set");
@@ -140,12 +149,20 @@ public class ProfileActivity extends AppCompatActivity {
             binding.imgSignatureView.setAlpha(0.3f);
             binding.imgSignatureView.setImageResource(R.drawable.ic_image_placeholder);
         }
+
+        // 4. Store Mode
+        String storeMode = doc.getString("storeMode");
+        boolean isPublic = "public".equals(storeMode);
+        binding.switchStoreMode.setOnCheckedChangeListener(null); // Prevent trigger on load
+        binding.switchStoreMode.setChecked(isPublic);
+        binding.switchStoreMode.setOnCheckedChangeListener(this::onStoreModeToggle);
     }
 
     // --- NEW: FULL SCREEN IMAGE DIALOG ---
 
     private void showFullScreenImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.isEmpty()) return;
+        if (imageUrl == null || imageUrl.isEmpty())
+            return;
 
         Dialog dialog = new Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
         dialog.setContentView(R.layout.dialog_fullscreen_image);
@@ -161,7 +178,23 @@ public class ProfileActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // --- NOTIFICATIONS (PRESERVED) ---
+    // --- NOTIFICATIONS & SETTINGS (PRESERVED & EXTENDED) ---
+
+    private void onStoreModeToggle(CompoundButton buttonView, boolean isChecked) {
+        String newMode = isChecked ? "public" : "private";
+        db.collection("users").document(userId)
+                .update("storeMode", newMode)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Store set to " + newMode, Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to update store mode", Toast.LENGTH_SHORT).show();
+                    // Revert UI
+                    binding.switchStoreMode.setOnCheckedChangeListener(null);
+                    binding.switchStoreMode.setChecked(!isChecked);
+                    binding.switchStoreMode.setOnCheckedChangeListener(this::onStoreModeToggle);
+                });
+    }
 
     private void setupNotificationSwitches() {
         prefs = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
@@ -184,21 +217,29 @@ public class ProfileActivity extends AppCompatActivity {
         toggleSubscription(TOPIC_USERS, isChecked, binding.switchNotifyUsers);
     }
 
-    private void toggleSubscription(String topic, boolean enable, CompoundButton switchButton) {
+    private void toggleSubscription(String baseTopic, boolean enable, CompoundButton switchButton) {
+        if (currentStoreHandle.isEmpty()) {
+            Toast.makeText(this, "Store Handle not configured.", Toast.LENGTH_SHORT).show();
+            switchButton.setChecked(!enable); // Revert switch
+            return;
+        }
+
+        String fullTopic = baseTopic + "_" + currentStoreHandle;
+
         if (enable) {
-            FirebaseMessaging.getInstance().subscribeToTopic(topic)
+            FirebaseMessaging.getInstance().subscribeToTopic(fullTopic)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            prefs.edit().putBoolean(topic, true).apply();
+                            prefs.edit().putBoolean(baseTopic, true).apply();
                         } else {
                             switchButton.setChecked(false);
                             Toast.makeText(this, "Failed to subscribe", Toast.LENGTH_SHORT).show();
                         }
                     });
         } else {
-            FirebaseMessaging.getInstance().unsubscribeFromTopic(topic)
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(fullTopic)
                     .addOnCompleteListener(task -> {
-                        prefs.edit().putBoolean(topic, false).apply();
+                        prefs.edit().putBoolean(baseTopic, false).apply();
                     });
         }
     }

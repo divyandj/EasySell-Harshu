@@ -28,7 +28,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
      */
     public interface OnProductActionClickListener {
         void onEditClick(Product product);
+
         void onVisibilityToggleClick(Product product);
+
+        void onDeleteClick(Product product);
+
         void onItemClick(Product product); // For clicking the card itself
     }
 
@@ -66,6 +70,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
         TextView stockStatusTextView; // New View
         MaterialButton visibilityToggleButton; // New View
         MaterialButton editButton; // New View
+        MaterialButton deleteButton;
         View imageContainer; // To handle clicks on the image/card area
 
         public ProductViewHolder(@NonNull View itemView) {
@@ -79,6 +84,7 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             stockStatusTextView = itemView.findViewById(R.id.stock_status_text_view); // New ID
             visibilityToggleButton = itemView.findViewById(R.id.product_visibility_toggle); // New ID
             editButton = itemView.findViewById(R.id.button_edit_product); // New ID
+            deleteButton = itemView.findViewById(R.id.button_delete_product);
             imageContainer = itemView.findViewById(R.id.image_container); // Container for main click
         }
 
@@ -92,19 +98,32 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             boolean isOnSale = discountedPrice > 0 && discountedPrice < originalPrice;
 
             saleBadgeChip.setVisibility(isOnSale ? View.VISIBLE : View.GONE);
-            productPriceTextView.setText(String.format(Locale.getDefault(), "₹%.0f", isOnSale ? discountedPrice : originalPrice)); // Using %.0f for cleaner display
+            productPriceTextView
+                    .setText(String.format(Locale.getDefault(), "₹%.0f", isOnSale ? discountedPrice : originalPrice)); // Using
+                                                                                                                       // %.0f
+                                                                                                                       // for
+                                                                                                                       // cleaner
+                                                                                                                       // display
             productOriginalPriceTextView.setVisibility(isOnSale ? View.VISIBLE : View.GONE);
             if (isOnSale) {
                 productOriginalPriceTextView.setText(String.format(Locale.getDefault(), "₹%.0f", originalPrice));
-                productOriginalPriceTextView.setPaintFlags(productOriginalPriceTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+                productOriginalPriceTextView
+                        .setPaintFlags(productOriginalPriceTextView.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
             } else {
-                productOriginalPriceTextView.setPaintFlags(productOriginalPriceTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)); // Remove strikethrough if not on sale
+                productOriginalPriceTextView
+                        .setPaintFlags(productOriginalPriceTextView.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG)); // Remove
+                                                                                                                       // strikethrough
+                                                                                                                       // if
+                                                                                                                       // not
+                                                                                                                       // on
+                                                                                                                       // sale
             }
 
             // --- Stock Status ---
             // TODO: Add logic here if you have variant stock vs simple stock
             if (product.isInStock()) {
-                stockStatusTextView.setText(String.format(Locale.getDefault(), "%d in stock", product.getAvailableQuantity()));
+                stockStatusTextView
+                        .setText(String.format(Locale.getDefault(), "%d in stock", product.getAvailableQuantity()));
                 // Optionally change the dot color here based on stock
             } else {
                 stockStatusTextView.setText("Out of stock");
@@ -147,9 +166,11 @@ public class ProductAdapter extends RecyclerView.Adapter<ProductAdapter.ProductV
             // --- Click Listeners ---
             editButton.setOnClickListener(v -> listener.onEditClick(product));
             visibilityToggleButton.setOnClickListener(v -> listener.onVisibilityToggleClick(product));
+            deleteButton.setOnClickListener(v -> listener.onDeleteClick(product));
             // Allow clicking anywhere on the card/image to view details
             itemView.setOnClickListener(v -> listener.onItemClick(product));
-            imageContainer.setOnClickListener(v -> listener.onItemClick(product)); // Also handle click on image container
+            imageContainer.setOnClickListener(v -> listener.onItemClick(product)); // Also handle click on image
+                                                                                   // container
         }
     }
 }

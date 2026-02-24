@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.easysell.databinding.ActivityUserRequestsBinding;
 import com.google.android.material.tabs.TabLayout;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -27,6 +28,7 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
     private UserRequestAdapter adapter;
     private List<UserRequest> requestList;
     private String currentFilterStatus = "pending"; // Default tab
+    private String currentStoreHandle = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,8 +49,8 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
         binding.recyclerRequests.setLayoutManager(new LinearLayoutManager(this));
         binding.recyclerRequests.setAdapter(adapter);
 
-        // Load default (Pending)
-        loadRequests("pending");
+        // Fetch seller's store handle before loading requests
+        fetchStoreHandleAndLoad();
 
         // Handle Tab Selection
         binding.tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -70,21 +72,47 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {}
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {}
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
+    }
+
+    private void fetchStoreHandleAndLoad() {
+        binding.progressBar.setVisibility(View.VISIBLE);
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        db.collection("users").document(currentUserId).get().addOnSuccessListener(doc -> {
+            if (doc.exists() && doc.getString("storeHandle") != null) {
+                currentStoreHandle = doc.getString("storeHandle");
+                loadRequests("pending");
+            } else {
+                binding.progressBar.setVisibility(View.GONE);
+                binding.emptyView.setVisibility(View.VISIBLE);
+                binding.emptyViewText.setText("Store Handle not configured for this account.");
+            }
+        }).addOnFailureListener(e -> {
+            binding.progressBar.setVisibility(View.GONE);
+            Toast.makeText(this, "Failed to load store profile.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error fetching store handle", e);
         });
     }
 
     private void loadRequests(String status) {
+        if (currentStoreHandle == null || currentStoreHandle.isEmpty())
+            return;
+
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.emptyView.setVisibility(View.GONE);
         binding.recyclerRequests.setVisibility(View.GONE);
 
-        db.collection("users")
-                .whereEqualTo("status", status)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
+        // Query by storeHandle, filter status and sort createdAt IN-MEMORY
+        // This avoids requiring a dynamic composite index for every store handle.
+        db.collection("store_access_requests")
+                .whereEqualTo("storeHandle", currentStoreHandle)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     binding.progressBar.setVisibility(View.GONE);
@@ -94,29 +122,60 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
                         for (DocumentSnapshot doc : queryDocumentSnapshots) {
                             UserRequest req = doc.toObject(UserRequest.class);
                             if (req != null) {
-                                if (req.getUid() == null) req.setUid(doc.getId());
-                                requestList.add(req);
+                                // Important: We expect req.uid = buyerUid due to @PropertyName handling if it
+                                // exists
+                                // If not present in JSON, fallback to fallback document ID parsing (unlikely)
+                                if (req.getUid() == null) {
+                                    // The fallback doc ID is {buyerUid}_{storeHandle}
+                                    String docId = doc.getId();
+                                    if (docId.contains("_"))
+                                        req.setUid(docId.split("_")[0]);
+                                }
+
+                                // IN-MEMORY FILTERING
+                                if (status.equals(req.getStatus())) {
+                                    requestList.add(req);
+                                }
                             }
                         }
-                        adapter.updateList(requestList, status); // Update adapter with new list and status
-                        binding.recyclerRequests.setVisibility(View.VISIBLE);
+
+                        // IN-MEMORY SORTING (DESCENDING by createdAt)
+                        requestList.sort((r1, r2) -> {
+                            if (r1.getCreatedAt() == null && r2.getCreatedAt() == null)
+                                return 0;
+                            if (r1.getCreatedAt() == null)
+                                return 1;
+                            if (r2.getCreatedAt() == null)
+                                return -1;
+                            return r2.getCreatedAt().compareTo(r1.getCreatedAt());
+                        });
+
+                        if (requestList.isEmpty()) {
+                            showEmptyView(status);
+                        } else {
+                            adapter.updateList(requestList, status);
+                            binding.recyclerRequests.setVisibility(View.VISIBLE);
+                        }
                     } else {
-                        binding.emptyView.setVisibility(View.VISIBLE);
-                        // Update text based on context
-                        if ("pending".equals(status)) binding.emptyViewText.setText("No pending requests");
-                        else if ("approved".equals(status)) binding.emptyViewText.setText("No approved users");
-                        else binding.emptyViewText.setText("No rejected users");
+                        showEmptyView(status);
                     }
                 })
                 .addOnFailureListener(e -> {
                     binding.progressBar.setVisibility(View.GONE);
                     Log.e(TAG, "Error loading requests", e);
                     Toast.makeText(this, "Failed to load data.", Toast.LENGTH_SHORT).show();
-
-                    if (e.getMessage() != null && e.getMessage().contains("index")) {
-                        Log.e(TAG, "INDEX REQUIRED: Check Logcat for URL to create index.");
-                    }
                 });
+    }
+
+    private void showEmptyView(String status) {
+        binding.emptyView.setVisibility(View.VISIBLE);
+        if ("pending".equals(status))
+            binding.emptyViewText.setText("No pending requests");
+        else if ("approved".equals(status))
+            binding.emptyViewText.setText("No approved users");
+        else
+            binding.emptyViewText.setText("No rejected users");
+        binding.recyclerRequests.setVisibility(View.GONE);
     }
 
     @Override
@@ -139,12 +198,15 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
     }
 
     private void updateStatus(UserRequest request, String newStatus) {
-        if (request.getUid() == null) return;
+        if (request.getUid() == null || currentStoreHandle.isEmpty())
+            return;
 
         // Visual feedback immediately
         Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
 
-        db.collection("users").document(request.getUid())
+        String docId = request.getUid() + "_" + currentStoreHandle;
+
+        db.collection("store_access_requests").document(docId)
                 .update("status", newStatus)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "User " + newStatus, Toast.LENGTH_SHORT).show();

@@ -22,6 +22,8 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
 
     public interface OnCatalogueClickListener {
         void onCatalogueClick(Catalogue catalogue);
+
+        void onOptionsClick(Catalogue catalogue, View anchor);
     }
 
     public CatalogueAdapter(List<Catalogue> catalogueList, OnCatalogueClickListener listener) {
@@ -49,12 +51,14 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
 
     static class CatalogueViewHolder extends RecyclerView.ViewHolder {
         TextView nameTextView;
-        ImageView coverImageView; // Added ImageView
+        ImageView coverImageView;
+        ImageView optionsIcon;
 
         public CatalogueViewHolder(@NonNull View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.catalogue_name_text_view);
-            coverImageView = itemView.findViewById(R.id.catalogue_image_view); // Bind to ID from XML
+            coverImageView = itemView.findViewById(R.id.catalogue_image_view);
+            optionsIcon = itemView.findViewById(R.id.catalogue_options_icon);
         }
 
         public void bind(final Catalogue catalogue, final OnCatalogueClickListener listener) {
@@ -89,6 +93,7 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
             }
 
             itemView.setOnClickListener(v -> listener.onCatalogueClick(catalogue));
+            optionsIcon.setOnClickListener(v -> listener.onOptionsClick(catalogue, v));
         }
     }
 }

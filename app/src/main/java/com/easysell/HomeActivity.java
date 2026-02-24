@@ -19,13 +19,12 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.easysell.databinding.ActivityHomeBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.messaging.FirebaseMessaging; // REQUIRED FOR NOTIFICATIONS
 import com.bumptech.glide.Glide;
@@ -36,7 +35,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     private static final String TAG = "HomeActivity";
     private ActivityHomeBinding binding;
-    private GoogleSignInClient googleSignInClient;
+    // Removed googleSignInClient
     private FirebaseFirestore db;
     private CatalogueAdapter adapter;
     private List<Catalogue> catalogueList;
@@ -46,17 +45,19 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
     private ListenerRegistration orderCountListener;
     private ListenerRegistration requestCountListener;
 
-    private GoogleSignInAccount currentAccount; // Store the account info
+    private FirebaseUser currentAccount; // Store the account info
+    private String currentStoreHandle = "";
 
     // --- 1. PERMISSION LAUNCHER ---
-    private final ActivityResultLauncher<String> requestPermissionLauncher =
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
                     Log.d(TAG, "Notification permission granted");
                     // Fix: Initialize subscriptions immediately after permission
                     initNotifications();
                 } else {
-                    Toast.makeText(this, "Notifications disabled. You won't receive order alerts.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Notifications disabled. You won't receive order alerts.", Toast.LENGTH_LONG)
+                            .show();
                 }
             });
 
@@ -72,9 +73,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         // Initialize Firebase
         db = FirebaseFirestore.getInstance();
 
-        // Initialize GoogleSignInClient for sign out
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).build();
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
+        // Initialize Firebase Auth is handled via FirebaseAuth.getInstance() when
+        // needed
 
         // --- 2. SETUP NOTIFICATIONS ---
         askNotificationPermission();
@@ -83,13 +83,47 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         setupClickListeners();
 
         setupRecyclerView();
+
+        // --- HANDLE NOTIFICATION CLICKS ---
+        handleNotificationIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent != null && intent.getExtras() != null) {
+            String type = intent.getStringExtra("type");
+            if (type == null)
+                return;
+
+            if ("order".equals(type)) {
+                String orderId = intent.getStringExtra("orderId");
+                String catalogueId = intent.getStringExtra("catalogueId");
+                if (orderId != null) {
+                    Intent orderIntent = new Intent(this, OrderDetailActivity.class);
+                    orderIntent.putExtra("ORDER_ID", orderId);
+                    if (catalogueId != null && !catalogueId.isEmpty()) {
+                        orderIntent.putExtra("CATALOGUE_ID", catalogueId);
+                    }
+                    startActivity(orderIntent);
+                }
+            } else if ("user".equals(type)) {
+                Intent requestIntent = new Intent(this, UserRequestsActivity.class);
+                startActivity(requestIntent);
+            }
+        }
     }
 
     // --- 3. NOTIFICATION LOGIC (CRITICAL FIX) ---
     private void askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
                 // Permission already granted, subscribe to topics
                 initNotifications();
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
@@ -104,27 +138,39 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
     }
 
     /**
-     * Subscribes the device to the backend topics ("admin_orders" and "admin_new_users").
+     * Subscribes the device to the backend topics ("admin_orders" and
+     * "admin_new_users").
      * Without this, the backend sends messages into the void.
      */
     private void initNotifications() {
-        // 1. Subscribe to Orders (Matches your backend: topic: "admin_orders")
-        FirebaseMessaging.getInstance().subscribeToTopic("admin_orders")
+        if (currentStoreHandle == null || currentStoreHandle.isEmpty()) {
+            return; // Wait until store handle is loaded
+        }
+
+        String ordersTopic = "admin_orders_" + currentStoreHandle;
+        String usersTopic = "admin_new_users_" + currentStoreHandle;
+
+        // Subscribe to store-specific Orders topic
+        FirebaseMessaging.getInstance().subscribeToTopic(ordersTopic)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "✅ Subscribed to admin_orders");
+                        Log.d(TAG, "✅ Subscribed to " + ordersTopic);
                     } else {
-                        Log.e(TAG, "❌ Failed to subscribe to admin_orders", task.getException());
+                        Log.e(TAG, "❌ Failed to subscribe to " + ordersTopic, task.getException());
                     }
                 });
 
-        // 2. Subscribe to New Users (Matches your backend: topic: "admin_new_users")
-        FirebaseMessaging.getInstance().subscribeToTopic("admin_new_users")
+        // Subscribe to store-specific New Users topic
+        FirebaseMessaging.getInstance().subscribeToTopic(usersTopic)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "✅ Subscribed to admin_new_users");
+                        Log.d(TAG, "✅ Subscribed to " + usersTopic);
                     }
                 });
+
+        // Cleanup: Unsubscribe from the old global topics
+        FirebaseMessaging.getInstance().unsubscribeFromTopic("admin_orders");
+        FirebaseMessaging.getInstance().unsubscribeFromTopic("admin_new_users");
 
         // 3. Log Token for Debugging
         FirebaseMessaging.getInstance().getToken()
@@ -160,16 +206,20 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             startActivity(intent);
         });
 
+        binding.logoutIcon.setOnClickListener(view -> showSignOutConfirmationDialog());
+        binding.previewIcon.setOnClickListener(view -> openStorefrontPreview());
+
         binding.viewAllText.setOnClickListener(v -> {
             binding.categoriesRecyclerView.smoothScrollToPosition(0);
         });
     }
 
-    private void updateProfileUI(GoogleSignInAccount account) {
-        if (account == null) return;
+    private void updateProfileUI(FirebaseUser account) {
+        if (account == null)
+            return;
 
         // Fetch the latest data from Firestore (Matches ProfileActivity logic)
-        db.collection("users").document(account.getId()).get()
+        db.collection("users").document(account.getUid()).get()
                 .addOnSuccessListener(document -> {
                     if (document.exists()) {
                         // 1. Get Name (Try Business Name -> Owner Name -> Google Name)
@@ -192,6 +242,20 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
                             loadProfileImage(firestoreUrl);
                         } else if (account.getPhotoUrl() != null) {
                             loadProfileImage(account.getPhotoUrl().toString());
+                        }
+
+                        // 3. Get Store Handle
+                        String handle = document.getString("storeHandle");
+                        if (handle != null && !handle.isEmpty()) {
+                            currentStoreHandle = handle;
+                        } else {
+                            currentStoreHandle = "";
+                        }
+
+                        // Attach request listener and init notifications now that store handle is known
+                        initNotifications();
+                        if (requestCountListener == null) {
+                            attachRequestCountListener();
                         }
                     } else {
                         // First time login or no profile set yet, use Google defaults
@@ -220,11 +284,12 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
                 .placeholder(R.drawable.ic_person)
                 .into(binding.profileIcon);
     }
+
     @Override
     protected void onStart() {
         super.onStart();
         // Check for signed-in user EVERY time the activity starts to ensure security
-        currentAccount = GoogleSignIn.getLastSignedInAccount(this);
+        currentAccount = FirebaseAuth.getInstance().getCurrentUser();
         if (currentAccount == null) {
             Log.w(TAG, "User not signed in onStart, redirecting to login.");
             signOutAndGoToLogin();
@@ -242,7 +307,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
     @Override
     protected void onStop() {
         super.onStop();
-        // Detach all listeners when the activity is no longer visible to save battery/data
+        // Detach all listeners when the activity is no longer visible to save
+        // battery/data
         detachCatalogueListener();
         detachOrderCountListener();
         detachRequestCountListener();
@@ -257,8 +323,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     // --- LISTENER 1: CATALOGUES ---
     private void attachCatalogueListener() {
-        if (currentAccount != null && currentAccount.getId() != null && catalogueListener == null) {
-            String userId = currentAccount.getId();
+        if (currentAccount != null && currentAccount.getUid() != null && catalogueListener == null) {
+            String userId = currentAccount.getUid();
             Log.d(TAG, "Attaching catalogue listener for userId: " + userId);
 
             Query query = db.collection("catalogues")
@@ -291,8 +357,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     // --- LISTENER 2: ORDERS ---
     private void attachOrderCountListener() {
-        if (currentAccount != null && currentAccount.getId() != null && orderCountListener == null) {
-            String userId = currentAccount.getId(); // This is the SELLER's ID
+        if (currentAccount != null && currentAccount.getUid() != null && orderCountListener == null) {
+            String userId = currentAccount.getUid(); // This is the SELLER's ID
             orderCountListener = db.collectionGroup("orders")
                     .whereEqualTo("sellerId", userId)
                     .addSnapshotListener((snapshots, e) -> {
@@ -317,9 +383,9 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     // --- LISTENER 3: PENDING REQUESTS ---
     private void attachRequestCountListener() {
-        if (requestCountListener == null) {
-            requestCountListener = db.collection("users")
-                    .whereEqualTo("status", "pending")
+        if (requestCountListener == null && currentStoreHandle != null && !currentStoreHandle.isEmpty()) {
+            requestCountListener = db.collection("store_access_requests")
+                    .whereEqualTo("storeHandle", currentStoreHandle)
                     .addSnapshotListener((snapshots, e) -> {
                         if (e != null) {
                             Log.w(TAG, "Request count listen failed.", e);
@@ -327,11 +393,16 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
                             return;
                         }
 
-                        int requestCount = 0;
+                        int pendingCount = 0;
                         if (snapshots != null) {
-                            requestCount = snapshots.size();
+                            // Filter pending requests in-memory to avoid needing a composite index
+                            for (DocumentSnapshot doc : snapshots) {
+                                if ("pending".equals(doc.getString("status"))) {
+                                    pendingCount++;
+                                }
+                            }
                         }
-                        binding.totalRequestsText.setText(String.valueOf(requestCount));
+                        binding.totalRequestsText.setText(String.valueOf(pendingCount));
                     });
         }
     }
@@ -364,7 +435,42 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         Intent intent = new Intent(this, CatalogueDetailActivity.class);
         intent.putExtra("CATALOGUE_ID", catalogue.getId());
         intent.putExtra("CATALOGUE_NAME", catalogue.getName());
+        intent.putExtra("STORE_HANDLE", currentStoreHandle);
         startActivity(intent);
+    }
+
+    @Override
+    public void onOptionsClick(Catalogue catalogue, View anchor) {
+        androidx.appcompat.widget.PopupMenu popup = new androidx.appcompat.widget.PopupMenu(this, anchor);
+        popup.getMenu().add("Delete Catalogue");
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getTitle().equals("Delete Catalogue")) {
+                showDeleteCatalogueConfirmation(catalogue);
+            }
+            return true;
+        });
+        popup.show();
+    }
+
+    private void showDeleteCatalogueConfirmation(Catalogue catalogue) {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Delete Catalogue")
+                .setMessage(
+                        "Are you sure you want to delete '" + catalogue.getName() + "'? This action cannot be undone.")
+                .setPositiveButton("Delete", (dialog, which) -> deleteCatalogue(catalogue))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteCatalogue(Catalogue catalogue) {
+        db.collection("catalogues").document(catalogue.getId()).delete()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Catalogue deleted", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to delete catalogue", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error deleting catalogue", e);
+                });
     }
 
     // --- MENU & SIGN OUT ---
@@ -383,21 +489,43 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         return super.onOptionsItemSelected(item);
     }
 
+    private void openStorefrontPreview() {
+        if (currentStoreHandle.isEmpty()) {
+            Toast.makeText(this, "Please set your Store Link Prefix in Profile first.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String url = "https://" + currentStoreHandle + ".mmproperty.in";
+        try {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
+            startActivity(browserIntent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No browser app found.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showSignOutConfirmationDialog() {
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Sign Out")
+                .setMessage("Are you sure you want to sign out?")
+                .setPositiveButton("Sign Out", (dialog, which) -> signOutAndGoToLogin())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
     private void signOutAndGoToLogin() {
         // Detach all listeners before signing out to prevent crashes or leaks
         detachCatalogueListener();
         detachOrderCountListener();
         detachRequestCountListener();
 
-        googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-            SessionManager.getInstance().clear(); // Clear local session data
-            Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show();
+        FirebaseAuth.getInstance().signOut();
+        SessionManager.getInstance().clear(); // Clear local session data
+        Toast.makeText(this, "Signed out", Toast.LENGTH_SHORT).show();
 
-            Intent intent = new Intent(HomeActivity.this, SignInActivity.class);
-            // Clear back stack so user can't go back to Home
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+        Intent intent = new Intent(HomeActivity.this, SignInActivity.class);
+        // Clear back stack so user can't go back to Home
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

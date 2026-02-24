@@ -24,7 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.bumptech.glide.Glide;
 import com.easysell.databinding.ActivityOrderDetailBinding;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
+// Removed GoogleSignIn import
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
@@ -58,7 +58,7 @@ public class OrderDetailActivity extends AppCompatActivity {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    private final String[] statusOptions = {"Placed", "Processing", "Shipped", "Delivered", "Cancelled"};
+    private final String[] statusOptions = { "Placed", "Processing", "Shipped", "Delivered", "Cancelled" };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -237,7 +237,8 @@ public class OrderDetailActivity extends AppCompatActivity {
                 startActivity(intent);
             } else if (item.getTitle().equals("Chat on WhatsApp")) {
                 String cleanNumber = phoneNumber.replace("+", "").replace(" ", "").replace("-", "");
-                if (!cleanNumber.startsWith("91") && cleanNumber.length() == 10) cleanNumber = "91" + cleanNumber;
+                if (!cleanNumber.startsWith("91") && cleanNumber.length() == 10)
+                    cleanNumber = "91" + cleanNumber;
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse("https://wa.me/" + cleanNumber));
                 startActivity(intent);
@@ -256,8 +257,11 @@ public class OrderDetailActivity extends AppCompatActivity {
                 Uri gmmIntentUri = Uri.parse("geo:0,0?q=" + Uri.encode(address));
                 Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
                 mapIntent.setPackage("com.google.android.apps.maps");
-                if (mapIntent.resolveActivity(getPackageManager()) != null) startActivity(mapIntent);
-                else startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(address))));
+                if (mapIntent.resolveActivity(getPackageManager()) != null)
+                    startActivity(mapIntent);
+                else
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.google.com/maps/search/?api=1&query=" + Uri.encode(address))));
             } else if (item.getTitle().equals("Copy Address")) {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                 ClipData clip = ClipData.newPlainText("Shipping Address", address);
@@ -278,9 +282,7 @@ public class OrderDetailActivity extends AppCompatActivity {
         }
 
         String userId;
-        if (GoogleSignIn.getLastSignedInAccount(this) != null) {
-            userId = GoogleSignIn.getLastSignedInAccount(this).getId();
-        } else if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         } else {
             Toast.makeText(this, "Login required to share.", Toast.LENGTH_SHORT).show();
@@ -309,7 +311,9 @@ public class OrderDetailActivity extends AppCompatActivity {
                                     .load(profile.getProfileImageUrl())
                                     .submit()
                                     .get();
-                        } catch (Exception e) { Log.e(TAG, "Failed to load logo", e); }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to load logo", e);
+                        }
                     }
 
                     if (profile.getSignatureImageUrl() != null && !profile.getSignatureImageUrl().isEmpty()) {
@@ -319,7 +323,9 @@ public class OrderDetailActivity extends AppCompatActivity {
                                     .load(profile.getSignatureImageUrl())
                                     .submit()
                                     .get();
-                        } catch (Exception e) { Log.e(TAG, "Failed to load signature", e); }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to load signature", e);
+                        }
                     }
                 }
 
@@ -356,8 +362,7 @@ public class OrderDetailActivity extends AppCompatActivity {
                             imageCache,
                             finalProfile,
                             finalLogo,
-                            finalSign
-                    );
+                            finalSign);
 
                     binding.btnShareInvoice.setEnabled(true);
                     binding.btnShareInvoice.setText("Download & Share Invoice");
@@ -374,7 +379,8 @@ public class OrderDetailActivity extends AppCompatActivity {
                 mainHandler.post(() -> {
                     binding.btnShareInvoice.setEnabled(true);
                     binding.btnShareInvoice.setText("Download & Share Invoice");
-                    Toast.makeText(OrderDetailActivity.this, "Error preparing invoice: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(OrderDetailActivity.this, "Error preparing invoice: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
                 });
             }
         });
@@ -385,8 +391,7 @@ public class OrderDetailActivity extends AppCompatActivity {
             Uri uri = FileProvider.getUriForFile(
                     this,
                     getApplicationContext().getPackageName() + ".provider",
-                    file
-            );
+                    file);
 
             StringBuilder msg = new StringBuilder();
             msg.append("Invoice for Order #").append(currentOrder.getId().toUpperCase()).append("\n\n");
@@ -441,11 +446,29 @@ public class OrderDetailActivity extends AppCompatActivity {
         int colorRes = R.color.text_secondary;
         if (status != null) {
             switch (status.toLowerCase()) {
-                case "placed": case "pending": bgRes = R.drawable.bg_chip_blue; colorRes = R.color.info; break;
-                case "processing": bgRes = R.drawable.bg_chip_orange; colorRes = R.color.warning; break;
-                case "shipped": bgRes = R.drawable.bg_chip_orange; colorRes = R.color.warning; break;
-                case "delivered": case "completed": bgRes = R.drawable.bg_chip_green; colorRes = R.color.success; break;
-                case "cancelled": case "failed": bgRes = R.drawable.bg_chip_red; colorRes = R.color.error; break;
+                case "placed":
+                case "pending":
+                    bgRes = R.drawable.bg_chip_blue;
+                    colorRes = R.color.info;
+                    break;
+                case "processing":
+                    bgRes = R.drawable.bg_chip_orange;
+                    colorRes = R.color.warning;
+                    break;
+                case "shipped":
+                    bgRes = R.drawable.bg_chip_orange;
+                    colorRes = R.color.warning;
+                    break;
+                case "delivered":
+                case "completed":
+                    bgRes = R.drawable.bg_chip_green;
+                    colorRes = R.color.success;
+                    break;
+                case "cancelled":
+                case "failed":
+                    bgRes = R.drawable.bg_chip_red;
+                    colorRes = R.color.error;
+                    break;
             }
         }
         binding.statusBadge.setBackgroundResource(bgRes);
@@ -454,7 +477,10 @@ public class OrderDetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home) { onBackPressed(); return true; }
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 }
