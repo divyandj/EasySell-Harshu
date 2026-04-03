@@ -209,10 +209,25 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
         binding.logoutIcon.setOnClickListener(view -> showSignOutConfirmationDialog());
         binding.previewIcon.setOnClickListener(view -> openStorefrontPreview());
+        binding.shareIcon.setOnClickListener(view -> shareStoreUrl());
+        binding.shareStoreBanner.setOnClickListener(view -> shareStoreUrl());
 
         binding.viewAllText.setOnClickListener(v -> {
             binding.categoriesRecyclerView.smoothScrollToPosition(0);
         });
+    }
+
+    private void shareStoreUrl() {
+        if (currentStoreHandle == null || currentStoreHandle.isEmpty()) {
+            Toast.makeText(this, "Store handle not configured. Set it in Profile settings.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String url = "https://" + currentStoreHandle + ".store.bydj.dev";
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out my store!");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out my store on Vyparsetu! \n" + url);
+        startActivity(Intent.createChooser(shareIntent, "Share your store via"));
     }
 
     private void updateProfileUI(FirebaseUser account) {
@@ -249,6 +264,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
                         String handle = document.getString("storeHandle");
                         if (handle != null && !handle.isEmpty()) {
                             currentStoreHandle = handle;
+                            binding.shareStoreUrl.setText(handle + ".store.bydj.dev");
                         } else {
                             currentStoreHandle = "";
                         }

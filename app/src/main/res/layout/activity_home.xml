@@ -89,6 +89,17 @@
                 app:tint="@color/text_on_primary" />
 
             <ImageView
+                android:id="@+id/share_icon"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/ic_share"
+                android:padding="10dp"
+                android:background="@drawable/icon_button_bg"
+                android:contentDescription="Share Store"
+                app:tint="@color/text_on_primary" />
+
+            <ImageView
                 android:id="@+id/preview_icon"
                 android:layout_width="44dp"
                 android:layout_height="44dp"
@@ -401,6 +412,75 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <!-- Share Store Banner -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/share_store_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="16dp"
+                app:cardElevation="0dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="@color/primary"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:gravity="center_vertical">
+
+                    <LinearLayout
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:background="@drawable/icon_button_bg"
+                        android:gravity="center">
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:src="@drawable/ic_share"
+                            app:tint="@color/white" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="14dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Share Your Store"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/white"/>
+
+                        <TextView
+                            android:id="@+id/share_store_url"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="yourstore.store.bydj.dev"
+                            android:textSize="12sp"
+                            android:textColor="@color/white"
+                            android:alpha="0.8"/>
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/white"
+                        android:alpha="0.7"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <LinearLayout
                 android:layout_width="match_parent"

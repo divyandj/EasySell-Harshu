@@ -26,6 +26,8 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.firebase.firestore.SetOptions;
+
 public class EditProfileActivity extends AppCompatActivity {
 
     private static final String TAG = "EditProfileActivity";
@@ -137,6 +139,12 @@ public class EditProfileActivity extends AppCompatActivity {
                             binding.imgSignaturePreview.setAlpha(1.0f);
                             Glide.with(this).load(currentSignatureUrl).fitCenter().into(binding.imgSignaturePreview);
                         }
+
+                        // Contact Info
+                        binding.etContactEmail.setText(document.getString("contactEmail"));
+                        binding.etContactPhone.setText(document.getString("contactPhone"));
+                        binding.etContactWhatsapp.setText(document.getString("contactWhatsapp"));
+                        binding.etContactAddress.setText(document.getString("contactAddress"));
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -265,13 +273,20 @@ public class EditProfileActivity extends AppCompatActivity {
         data.put("gstin", binding.etGst.getText().toString().trim());
         data.put("address", binding.etAddress.getText().toString().trim());
 
+        // Contact Info
+        data.put("contactEmail", binding.etContactEmail.getText().toString().trim());
+        data.put("contactPhone", binding.etContactPhone.getText().toString().trim());
+        data.put("contactWhatsapp", binding.etContactWhatsapp.getText().toString().trim());
+        data.put("contactAddress", binding.etContactAddress.getText().toString().trim());
+
         // Save URLs
         if (logoUrl != null)
             data.put("profileImageUrl", logoUrl);
         if (signatureUrl != null)
             data.put("signatureImageUrl", signatureUrl);
 
-        db.collection("users").document(userId).set(data)
+        // Use merge to preserve existing fields like storeMode, requestProductEnabled, inventoryTracking
+        db.collection("users").document(userId).set(data, SetOptions.merge())
                 .addOnSuccessListener(aVoid -> handler.post(() -> {
                     setLoading(false, "");
                     Toast.makeText(this, "Profile Updated Successfully!", Toast.LENGTH_SHORT).show();

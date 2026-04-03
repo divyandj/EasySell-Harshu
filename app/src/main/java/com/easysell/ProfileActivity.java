@@ -34,6 +34,7 @@ public class ProfileActivity extends AppCompatActivity {
     // TOPIC NAMES (Base topics, actual topics append "_" + storeHandle)
     private static final String TOPIC_ORDERS = "admin_orders";
     private static final String TOPIC_USERS = "admin_new_users";
+    private static final String TOPIC_PRODUCT_REQUESTS = "admin_product_requests";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,6 +164,24 @@ public class ProfileActivity extends AppCompatActivity {
         binding.switchInventoryTracking.setOnCheckedChangeListener(null);
         binding.switchInventoryTracking.setChecked(isInventoryOn);
         binding.switchInventoryTracking.setOnCheckedChangeListener(this::onInventoryTrackingToggle);
+
+        // 6. Request Product toggle
+        Boolean requestProductEnabled = doc.getBoolean("requestProductEnabled");
+        boolean isRequestOn = (requestProductEnabled != null && requestProductEnabled);
+        binding.switchRequestProduct.setOnCheckedChangeListener(null);
+        binding.switchRequestProduct.setChecked(isRequestOn);
+        binding.switchRequestProduct.setOnCheckedChangeListener(this::onRequestProductToggle);
+
+        // 7. Contact Info
+        String contactEmail = doc.getString("contactEmail");
+        String contactPhone = doc.getString("contactPhone");
+        String contactWhatsapp = doc.getString("contactWhatsapp");
+        String contactAddress = doc.getString("contactAddress");
+
+        binding.tvContactEmail.setText(contactEmail != null && !contactEmail.isEmpty() ? contactEmail : "Contact Email Not Set");
+        binding.tvContactPhone.setText(contactPhone != null && !contactPhone.isEmpty() ? contactPhone : "Contact Phone Not Set");
+        binding.tvContactWhatsapp.setText(contactWhatsapp != null && !contactWhatsapp.isEmpty() ? contactWhatsapp : "WhatsApp Not Set");
+        binding.tvContactAddress.setText(contactAddress != null && !contactAddress.isEmpty() ? contactAddress : "Contact Address Not Set");
     }
 
     // --- NEW: FULL SCREEN IMAGE DIALOG ---
@@ -228,6 +247,11 @@ public class ProfileActivity extends AppCompatActivity {
 
         binding.switchNotifyOrders.setOnCheckedChangeListener(this::onOrdersToggle);
         binding.switchNotifyUsers.setOnCheckedChangeListener(this::onUsersToggle);
+
+        // Request Alerts switch
+        boolean isRequestAlertsEnabled = prefs.getBoolean(TOPIC_PRODUCT_REQUESTS, true);
+        binding.switchNotifyRequests.setChecked(isRequestAlertsEnabled);
+        binding.switchNotifyRequests.setOnCheckedChangeListener(this::onRequestAlertsToggle);
     }
 
     private void onOrdersToggle(CompoundButton buttonView, boolean isChecked) {
@@ -236,6 +260,24 @@ public class ProfileActivity extends AppCompatActivity {
 
     private void onUsersToggle(CompoundButton buttonView, boolean isChecked) {
         toggleSubscription(TOPIC_USERS, isChecked, binding.switchNotifyUsers);
+    }
+
+    private void onRequestAlertsToggle(CompoundButton buttonView, boolean isChecked) {
+        toggleSubscription(TOPIC_PRODUCT_REQUESTS, isChecked, binding.switchNotifyRequests);
+    }
+
+    private void onRequestProductToggle(CompoundButton buttonView, boolean isChecked) {
+        db.collection("users").document(userId)
+                .update("requestProductEnabled", isChecked)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Product requests " + (isChecked ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to update setting", Toast.LENGTH_SHORT).show();
+                    binding.switchRequestProduct.setOnCheckedChangeListener(null);
+                    binding.switchRequestProduct.setChecked(!isChecked);
+                    binding.switchRequestProduct.setOnCheckedChangeListener(this::onRequestProductToggle);
+                });
     }
 
     private void toggleSubscription(String baseTopic, boolean enable, CompoundButton switchButton) {
