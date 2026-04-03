@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add a Reward"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="4dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create something exciting your customers can earn!"
+        android:textSize="13sp"
+        android:textColor="@color/gray_600"
+        android:layout_marginBottom="24dp"/>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Reward Name"
+        app:helperText="e.g. Gift Hamper, ₹100 Off, Free Shipping, Staycation"
+        app:helperTextEnabled="true"
+        android:textColorHint="@color/gray_600"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_marginBottom="8dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reward_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapWords"
+            android:textColor="@color/black"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Description (Optional)"
+        app:helperText="Short detail about what they get"
+        app:helperTextEnabled="true"
+        android:textColorHint="@color/gray_600"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_marginBottom="8dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reward_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textMultiLine"
+            android:minLines="2"
+            android:gravity="top"
+            android:textColor="@color/black"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Points required to claim"
+        app:helperText="How many points does a customer need?"
+        app:helperTextEnabled="true"
+        android:textColorHint="@color/gray_600"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_marginBottom="8dp">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reward_points"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:textColor="@color/black"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Reward Type -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reward Type"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:textColor="@color/gray_600"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="4dp"/>
+
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chip_group_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true"
+        android:layout_marginBottom="8dp">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_custom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎁 Custom"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:checked="true"/>
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_percent_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💰 % Off"
+            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_flat_off"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💵 ₹ Off"
+            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chip_free_shipping"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🚚 Free Shipping"
+            style="@style/Widget.MaterialComponents.Chip.Choice"/>
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- Value field (only for % off and ₹ off) -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/til_reward_value"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Discount value"
+        app:helperText="e.g. 10 for 10% off or ₹10 off"
+        app:helperTextEnabled="true"
+        android:textColorHint="@color/gray_600"
+        app:boxStrokeColor="@color/primary"
+        app:hintTextColor="@color/primary"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_reward_value"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:textColor="@color/black"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_add_reward"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="Add Reward"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        app:cornerRadius="12dp"
+        android:backgroundTint="@color/primary"/>
+
+</LinearLayout>

@@ -182,6 +182,26 @@ public class ProfileActivity extends AppCompatActivity {
         binding.tvContactPhone.setText(contactPhone != null && !contactPhone.isEmpty() ? contactPhone : "Contact Phone Not Set");
         binding.tvContactWhatsapp.setText(contactWhatsapp != null && !contactWhatsapp.isEmpty() ? contactWhatsapp : "WhatsApp Not Set");
         binding.tvContactAddress.setText(contactAddress != null && !contactAddress.isEmpty() ? contactAddress : "Contact Address Not Set");
+
+        // 8. Rewards toggle
+        Boolean rewardsEnabled = doc.getBoolean("rewardsEnabled");
+        boolean isRewardsOn = (rewardsEnabled != null && rewardsEnabled);
+        binding.switchRewardsEnabled.setOnCheckedChangeListener(null);
+        binding.switchRewardsEnabled.setChecked(isRewardsOn);
+        binding.switchRewardsEnabled.setOnCheckedChangeListener(this::onRewardsToggle);
+
+        // Update rewards summary
+        Double ppr = doc.getDouble("rewardsPointsPerRupee");
+        String pprStr = ppr != null ? String.valueOf(ppr.intValue()) : "1";
+        binding.tvRewardsSummary.setText(isRewardsOn
+                ? "Enabled · " + pprStr + " pt/₹ · Tap to configure"
+                : "Disabled · Tap to configure");
+
+        // Tap on rewards section to open config
+        binding.rewardsSection.setOnClickListener(v -> {
+            Intent intent = new Intent(ProfileActivity.this, RewardsConfigActivity.class);
+            startActivity(intent);
+        });
     }
 
     // --- NEW: FULL SCREEN IMAGE DIALOG ---
@@ -266,17 +286,34 @@ public class ProfileActivity extends AppCompatActivity {
         toggleSubscription(TOPIC_PRODUCT_REQUESTS, isChecked, binding.switchNotifyRequests);
     }
 
+    // --- Request Product Toggle ---
     private void onRequestProductToggle(CompoundButton buttonView, boolean isChecked) {
         db.collection("users").document(userId)
                 .update("requestProductEnabled", isChecked)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Product requests " + (isChecked ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+                .addOnSuccessListener(v -> {
+                    Toast.makeText(this, isChecked ? "Product requests enabled" : "Product requests disabled", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to update setting", Toast.LENGTH_SHORT).show();
-                    binding.switchRequestProduct.setOnCheckedChangeListener(null);
-                    binding.switchRequestProduct.setChecked(!isChecked);
-                    binding.switchRequestProduct.setOnCheckedChangeListener(this::onRequestProductToggle);
+                    buttonView.setOnCheckedChangeListener(null);
+                    buttonView.setChecked(!isChecked);
+                    buttonView.setOnCheckedChangeListener(this::onRequestProductToggle);
+                });
+    }
+
+    // --- Rewards Toggle ---
+    private void onRewardsToggle(CompoundButton buttonView, boolean isChecked) {
+        db.collection("users").document(userId)
+                .update("rewardsEnabled", isChecked)
+                .addOnSuccessListener(v -> {
+                    binding.tvRewardsSummary.setText(isChecked
+                            ? "Enabled · Tap to configure"
+                            : "Disabled · Tap to configure");
+                    Toast.makeText(this, isChecked ? "Rewards enabled" : "Rewards disabled", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    buttonView.setOnCheckedChangeListener(null);
+                    buttonView.setChecked(!isChecked);
+                    buttonView.setOnCheckedChangeListener(this::onRewardsToggle);
                 });
     }
 
