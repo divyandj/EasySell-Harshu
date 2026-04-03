@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EasySell</string>
+    <string name="app_name">Vyparsetu</string>
     <string-array name="price_units_array">
         <item>per piece</item>
         <item>per set</item>

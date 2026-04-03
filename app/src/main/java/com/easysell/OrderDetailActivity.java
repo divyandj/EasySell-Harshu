@@ -196,6 +196,13 @@ public class OrderDetailActivity extends AppCompatActivity {
             binding.textShippingAddress.setText("Address unavailable");
         }
 
+        if (order.getTransportName() != null && !order.getTransportName().trim().isEmpty()) {
+            binding.rowTransport.setVisibility(View.VISIBLE);
+            binding.textTransportName.setText(order.getTransportName());
+        } else {
+            binding.rowTransport.setVisibility(View.GONE);
+        }
+
         boolean isWithBill = "withBill".equalsIgnoreCase(order.getBillingType());
         if (isWithBill) {
             binding.textBillingType.setText("Bill Requested");

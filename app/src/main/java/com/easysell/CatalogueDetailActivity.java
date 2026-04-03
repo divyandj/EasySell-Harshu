@@ -145,7 +145,7 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
             return;
         }
 
-        String deepLink = "https://" + storeHandle + ".mmproperty.in/catalogue/" + catalogueId;
+        String deepLink = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
         String messageBody = String.format(
                 "Check out my catalogue \"%s\" on Easy Sell!\n\nBrowse my products here:\n%s",
                 catalogueName != null ? catalogueName : "My Store",
@@ -174,7 +174,7 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
         }
 
         // The URL to open
-        String url = "https://" + storeHandle + ".mmproperty.in/catalogue/" + catalogueId;
+        String url = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
 
         try {
             // Create an Intent to view the URL

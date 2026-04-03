@@ -156,6 +156,13 @@ public class ProfileActivity extends AppCompatActivity {
         binding.switchStoreMode.setOnCheckedChangeListener(null); // Prevent trigger on load
         binding.switchStoreMode.setChecked(isPublic);
         binding.switchStoreMode.setOnCheckedChangeListener(this::onStoreModeToggle);
+
+        // 5. Inventory Tracking (default: true)
+        Boolean inventoryTracking = doc.getBoolean("inventoryTracking");
+        boolean isInventoryOn = (inventoryTracking == null || inventoryTracking);
+        binding.switchInventoryTracking.setOnCheckedChangeListener(null);
+        binding.switchInventoryTracking.setChecked(isInventoryOn);
+        binding.switchInventoryTracking.setOnCheckedChangeListener(this::onInventoryTrackingToggle);
     }
 
     // --- NEW: FULL SCREEN IMAGE DIALOG ---
@@ -193,6 +200,20 @@ public class ProfileActivity extends AppCompatActivity {
                     binding.switchStoreMode.setOnCheckedChangeListener(null);
                     binding.switchStoreMode.setChecked(!isChecked);
                     binding.switchStoreMode.setOnCheckedChangeListener(this::onStoreModeToggle);
+                });
+    }
+
+    private void onInventoryTrackingToggle(CompoundButton buttonView, boolean isChecked) {
+        db.collection("users").document(userId)
+                .update("inventoryTracking", isChecked)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Inventory tracking " + (isChecked ? "enabled" : "disabled"), Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to update setting", Toast.LENGTH_SHORT).show();
+                    binding.switchInventoryTracking.setOnCheckedChangeListener(null);
+                    binding.switchInventoryTracking.setChecked(!isChecked);
+                    binding.switchInventoryTracking.setOnCheckedChangeListener(this::onInventoryTrackingToggle);
                 });
     }
 

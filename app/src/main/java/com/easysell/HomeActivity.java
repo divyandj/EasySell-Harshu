@@ -198,7 +198,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         });
 
         binding.analyticsCard.setOnClickListener(view -> {
-            Toast.makeText(this, "Analytics feature coming soon!", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(HomeActivity.this, AnalyticsActivity.class);
+            startActivity(intent);
         });
 
         binding.profileIcon.setOnClickListener(view -> {
@@ -494,7 +495,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             Toast.makeText(this, "Please set your Store Link Prefix in Profile first.", Toast.LENGTH_LONG).show();
             return;
         }
-        String url = "https://" + currentStoreHandle + ".mmproperty.in";
+        String url = "https://" + currentStoreHandle + ".store.bydj.dev";
         try {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url));
             startActivity(browserIntent);

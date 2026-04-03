@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.glide)
     implementation("androidx.multidex:multidex:2.0.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0") // <--- ADD THIS (Make sure version matches your glide version)
-
     
+    // MPAndroidChart for Analytics
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 }

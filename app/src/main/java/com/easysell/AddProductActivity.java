@@ -111,6 +111,9 @@ public class AddProductActivity extends AppCompatActivity {
         setupUI();
         updateProgressSteps(1);
 
+        // Check if inventory tracking is enabled for this seller
+        checkInventoryTrackingSetting();
+
         if (productIdToEdit != null && !productIdToEdit.isEmpty()) {
             binding.toolbar.setTitle("Edit Product");
             fetchAndPopulateProductData(productIdToEdit);
@@ -122,6 +125,27 @@ public class AddProductActivity extends AppCompatActivity {
             binding.inventoryContent.setVisibility(View.VISIBLE);
             binding.inventoryArrow.setRotation(180);
         }
+    }
+
+    private void checkInventoryTrackingSetting() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        db.collection("users").document(user.getUid()).get()
+                .addOnSuccessListener(doc -> {
+                    if (doc.exists()) {
+                        Boolean inventoryTracking = doc.getBoolean("inventoryTracking");
+                        if (inventoryTracking != null && !inventoryTracking) {
+                            // Hide inventory card entirely
+                            binding.inventoryCard.setVisibility(View.GONE);
+                            // Set safe defaults: always in stock, unlimited quantity
+                            binding.inStockSwitch.setChecked(true);
+                            binding.quantityEditText.setText("");
+                            binding.allowBackordersSwitch.setChecked(false);
+                            binding.hideWhenOutOfStockSwitch.setChecked(false);
+                        }
+                    }
+                });
     }
 
     @Override

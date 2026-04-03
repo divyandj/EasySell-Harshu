@@ -4,12 +4,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
@@ -58,9 +62,10 @@ public class UserRequestAdapter extends RecyclerView.Adapter<UserRequestAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name, type, date, email, phone, gst;
+        TextView name, type, date, email, phone, gst, businessNameText, addressText;
         MaterialButton btnPrimary, btnSecondary;
-        ImageView avatarPlaceholder;
+        ImageView avatarPlaceholder, cardPhoto;
+        LinearLayout layoutBusinessName, layoutAddress;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -73,6 +78,11 @@ public class UserRequestAdapter extends RecyclerView.Adapter<UserRequestAdapter.
             btnPrimary = itemView.findViewById(R.id.btn_primary_action);
             btnSecondary = itemView.findViewById(R.id.btn_secondary_action);
             avatarPlaceholder = itemView.findViewById(R.id.img_avatar_placeholder);
+            businessNameText = itemView.findViewById(R.id.text_business_name);
+            addressText = itemView.findViewById(R.id.text_address);
+            cardPhoto = itemView.findViewById(R.id.img_card_photo);
+            layoutBusinessName = itemView.findViewById(R.id.layout_business_name);
+            layoutAddress = itemView.findViewById(R.id.layout_address);
         }
 
         public void bind(UserRequest request, OnRequestActionListener listener, String currentStatus) {
@@ -82,6 +92,36 @@ public class UserRequestAdapter extends RecyclerView.Adapter<UserRequestAdapter.
             email.setText(request.getEmail() != null ? request.getEmail() : "N/A");
             phone.setText(request.getPhoneNumber() != null ? request.getPhoneNumber() : "N/A");
             gst.setText(request.getGstPan() != null ? request.getGstPan() : "N/A");
+
+            // --- NEW FIELDS ---
+            if (request.getBusinessName() != null && !request.getBusinessName().isEmpty()) {
+                layoutBusinessName.setVisibility(View.VISIBLE);
+                businessNameText.setText(request.getBusinessName());
+            } else {
+                layoutBusinessName.setVisibility(View.GONE);
+            }
+
+            if (request.getAddress() != null && !request.getAddress().isEmpty()) {
+                layoutAddress.setVisibility(View.VISIBLE);
+                addressText.setText(request.getAddress());
+            } else {
+                layoutAddress.setVisibility(View.GONE);
+            }
+
+            if (request.getCardPhotoUrl() != null && !request.getCardPhotoUrl().isEmpty()) {
+                cardPhoto.setVisibility(View.VISIBLE);
+                Glide.with(itemView.getContext())
+                        .load(request.getCardPhotoUrl())
+                        .apply(new RequestOptions().transform(new RoundedCorners(24)))
+                        .into(cardPhoto);
+                cardPhoto.setOnClickListener(v -> {
+                    android.content.Intent intent = new android.content.Intent(itemView.getContext(), FullscreenPhotoActivity.class);
+                    intent.putExtra(FullscreenPhotoActivity.EXTRA_IMAGE_URL, request.getCardPhotoUrl());
+                    itemView.getContext().startActivity(intent);
+                });
+            } else {
+                cardPhoto.setVisibility(View.GONE);
+            }
 
             if (request.getCreatedAt() != null) {
                 SimpleDateFormat sdf = new SimpleDateFormat("MMM dd", Locale.getDefault());

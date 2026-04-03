@@ -20,6 +20,15 @@ public class UserRequest {
     @PropertyName("buyerGst")
     private String gstPan;
 
+    @PropertyName("buyerBusinessName")
+    private String businessName;
+
+    @PropertyName("buyerAddress")
+    private String address;
+
+    @PropertyName("buyerCardPhotoUrl")
+    private String cardPhotoUrl;
+
     private String status; // "pending", "approved", "rejected"
     private String storeHandle;
 
@@ -89,6 +98,36 @@ public class UserRequest {
         this.gstPan = gstPan;
         this.status = status;
         this.storeHandle = storeHandle;
+    }
+
+    @PropertyName("buyerBusinessName")
+    public String getBusinessName() {
+        return businessName;
+    }
+
+    @PropertyName("buyerBusinessName")
+    public void setBusinessName(String businessName) {
+        this.businessName = businessName;
+    }
+
+    @PropertyName("buyerAddress")
+    public String getAddress() {
+        return address;
+    }
+
+    @PropertyName("buyerAddress")
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    @PropertyName("buyerCardPhotoUrl")
+    public String getCardPhotoUrl() {
+        return cardPhotoUrl;
+    }
+
+    @PropertyName("buyerCardPhotoUrl")
+    public void setCardPhotoUrl(String cardPhotoUrl) {
+        this.cardPhotoUrl = cardPhotoUrl;
     }
 
     public String getStatus() {

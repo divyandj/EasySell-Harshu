@@ -15,7 +15,6 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +28,7 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
     private List<UserRequest> requestList;
     private String currentFilterStatus = "pending"; // Default tab
     private String currentStoreHandle = "";
+    private int queryGen = 0; // prevents stale callbacks from overwriting
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,16 +105,19 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
         if (currentStoreHandle == null || currentStoreHandle.isEmpty())
             return;
 
+        final int gen = ++queryGen;
+
         binding.progressBar.setVisibility(View.VISIBLE);
         binding.emptyView.setVisibility(View.GONE);
         binding.recyclerRequests.setVisibility(View.GONE);
 
-        // Query by storeHandle, filter status and sort createdAt IN-MEMORY
-        // This avoids requiring a dynamic composite index for every store handle.
         db.collection("store_access_requests")
                 .whereEqualTo("storeHandle", currentStoreHandle)
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    // Skip if user already switched to another tab
+                    if (gen != queryGen) return;
+
                     binding.progressBar.setVisibility(View.GONE);
                     requestList.clear();
 
@@ -122,11 +125,7 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
                         for (DocumentSnapshot doc : queryDocumentSnapshots) {
                             UserRequest req = doc.toObject(UserRequest.class);
                             if (req != null) {
-                                // Important: We expect req.uid = buyerUid due to @PropertyName handling if it
-                                // exists
-                                // If not present in JSON, fallback to fallback document ID parsing (unlikely)
                                 if (req.getUid() == null) {
-                                    // The fallback doc ID is {buyerUid}_{storeHandle}
                                     String docId = doc.getId();
                                     if (docId.contains("_"))
                                         req.setUid(docId.split("_")[0]);
@@ -161,6 +160,7 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
                     }
                 })
                 .addOnFailureListener(e -> {
+                    if (gen != queryGen) return;
                     binding.progressBar.setVisibility(View.GONE);
                     Log.e(TAG, "Error loading requests", e);
                     Toast.makeText(this, "Failed to load data.", Toast.LENGTH_SHORT).show();
@@ -201,7 +201,6 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
         if (request.getUid() == null || currentStoreHandle.isEmpty())
             return;
 
-        // Visual feedback immediately
         Toast.makeText(this, "Updating...", Toast.LENGTH_SHORT).show();
 
         String docId = request.getUid() + "_" + currentStoreHandle;
@@ -210,7 +209,6 @@ public class UserRequestsActivity extends AppCompatActivity implements UserReque
                 .update("status", newStatus)
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(this, "User " + newStatus, Toast.LENGTH_SHORT).show();
-                    // Reload current list to refresh UI
                     loadRequests(currentFilterStatus);
                 })
                 .addOnFailureListener(e -> {

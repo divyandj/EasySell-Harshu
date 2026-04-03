@@ -20,6 +20,7 @@ public class Order {
     private String status;
     private double totalAmount;
     private String userId;
+    private String transportName;
 
     public Order() {} // Empty constructor for Firestore
 
@@ -62,6 +63,9 @@ public class Order {
 
     public String getUserId() { return userId; }
     public void setUserId(String userId) { this.userId = userId; }
+
+    public String getTransportName() { return transportName; }
+    public void setTransportName(String transportName) { this.transportName = transportName; }
 
     // --- Nested Class: ShippingAddress ---
     public static class ShippingAddress {

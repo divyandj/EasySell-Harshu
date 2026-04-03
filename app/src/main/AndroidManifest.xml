@@ -60,6 +60,10 @@
             android:name=".AddCatalogueActivity"
             android:exported="false" />
         <activity
+            android:name=".AnalyticsActivity"
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
+            android:exported="false" />
+        <activity
             android:name=".HomeActivity"
             android:exported="false" />
         <activity
@@ -68,6 +72,10 @@
         <activity
             android:name=".UserRequestsActivity"
             android:exported="false" />
+        <activity
+            android:name=".FullscreenPhotoActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
         <activity
             android:name=".SignInActivity"
             android:exported="true">
