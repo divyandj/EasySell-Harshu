@@ -15,6 +15,8 @@ public class Order {
     private Date orderDate;
     private double orderSubtotal;
     private double orderTax;
+    private double rewardDiscount;
+    private RewardRedeemed rewardRedeemed;
     private String sellerId;
     private ShippingAddress shippingAddress;
     private String status;
@@ -48,6 +50,12 @@ public class Order {
 
     public double getOrderTax() { return orderTax; }
     public void setOrderTax(double orderTax) { this.orderTax = orderTax; }
+
+    public double getRewardDiscount() { return rewardDiscount; }
+    public void setRewardDiscount(double rewardDiscount) { this.rewardDiscount = rewardDiscount; }
+
+    public RewardRedeemed getRewardRedeemed() { return rewardRedeemed; }
+    public void setRewardRedeemed(RewardRedeemed rewardRedeemed) { this.rewardRedeemed = rewardRedeemed; }
 
     public String getSellerId() { return sellerId; }
     public void setSellerId(String sellerId) { this.sellerId = sellerId; }
@@ -96,5 +104,26 @@ public class Order {
         public String toString() {
             return address + ", " + city + " - " + pincode;
         }
+    }
+
+    public static class RewardRedeemed {
+        private String id;
+        private String title;
+        private String type;
+        private Double pointsCost;
+
+        public RewardRedeemed() {}
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
+
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
+
+        public Double getPointsCost() { return pointsCost; }
+        public void setPointsCost(Double pointsCost) { this.pointsCost = pointsCost; }
     }
 }

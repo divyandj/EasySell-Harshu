@@ -339,6 +339,43 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/row_reward_discount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="@dimen/spacing_sm"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+                        <TextView
+                            style="@style/TextBody2"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Reward Discount"/>
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="end">
+                            <TextView
+                                android:id="@+id/text_reward_discount"
+                                style="@style/TextBody1"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/success"
+                                tools:text="-₹500"/>
+                            <TextView
+                                android:id="@+id/text_reward_label"
+                                style="@style/TextCaption"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="2dp"
+                                tools:text="Summer Deal • flat off"/>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/row_tax"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"

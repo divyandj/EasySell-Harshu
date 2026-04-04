@@ -219,6 +219,25 @@ public class OrderDetailActivity extends AppCompatActivity {
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
         binding.textSubtotal.setText(currencyFormat.format(order.getOrderSubtotal()));
 
+        double rewardDiscount = order.getRewardDiscount();
+        Order.RewardRedeemed redeemedReward = order.getRewardRedeemed();
+        if (rewardDiscount > 0) {
+            binding.rowRewardDiscount.setVisibility(View.VISIBLE);
+            binding.textRewardDiscount.setText("- " + currencyFormat.format(rewardDiscount));
+            if (redeemedReward != null && redeemedReward.getTitle() != null && !redeemedReward.getTitle().trim().isEmpty()) {
+                StringBuilder rewardLabel = new StringBuilder(redeemedReward.getTitle().trim());
+                if (redeemedReward.getType() != null && !redeemedReward.getType().trim().isEmpty()) {
+                    rewardLabel.append(" • ").append(redeemedReward.getType().replace('_', ' '));
+                }
+                binding.textRewardLabel.setText(rewardLabel.toString());
+                binding.textRewardLabel.setVisibility(View.VISIBLE);
+            } else {
+                binding.textRewardLabel.setVisibility(View.GONE);
+            }
+        } else {
+            binding.rowRewardDiscount.setVisibility(View.GONE);
+        }
+
         if (isWithBill || order.getOrderTax() > 0) {
             binding.rowTax.setVisibility(View.VISIBLE);
             binding.textTax.setText("+ " + currencyFormat.format(order.getOrderTax()));

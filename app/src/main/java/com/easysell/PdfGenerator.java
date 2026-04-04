@@ -152,12 +152,35 @@ public class PdfGenerator {
 
         // --- 5. TOTALS ---
         TextView subtotal = view.findViewById(R.id.pdf_subtotal);
+        LinearLayout rewardRow = view.findViewById(R.id.pdf_reward_row);
+        TextView rewardDiscount = view.findViewById(R.id.pdf_reward_discount);
+        TextView rewardLabel = view.findViewById(R.id.pdf_reward_label);
         TextView tax = view.findViewById(R.id.pdf_tax);
         TextView total = view.findViewById(R.id.pdf_total);
         TextView amountWords = view.findViewById(R.id.pdf_amount_words);
         LinearLayout taxRow = view.findViewById(R.id.pdf_tax_row);
 
         subtotal.setText(currency.format(order.getOrderSubtotal()));
+
+        double appliedRewardDiscount = order.getRewardDiscount();
+        Order.RewardRedeemed redeemedReward = order.getRewardRedeemed();
+        if (appliedRewardDiscount > 0) {
+            rewardRow.setVisibility(View.VISIBLE);
+            rewardDiscount.setText("-" + currency.format(appliedRewardDiscount));
+            if (redeemedReward != null && redeemedReward.getTitle() != null && !redeemedReward.getTitle().trim().isEmpty()) {
+                StringBuilder rewardText = new StringBuilder(redeemedReward.getTitle().trim());
+                if (redeemedReward.getType() != null && !redeemedReward.getType().trim().isEmpty()) {
+                    rewardText.append(" • ").append(redeemedReward.getType().replace('_', ' '));
+                }
+                rewardLabel.setText(rewardText.toString());
+                rewardLabel.setVisibility(View.VISIBLE);
+            } else {
+                rewardLabel.setVisibility(View.GONE);
+            }
+        } else {
+            rewardRow.setVisibility(View.GONE);
+        }
+
         total.setText(currency.format(order.getTotalAmount()));
         amountWords.setText(convertAmountToWords((long) order.getTotalAmount()) + " Only");
 

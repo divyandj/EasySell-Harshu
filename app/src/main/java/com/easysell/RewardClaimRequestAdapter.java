@@ -4,8 +4,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.PopupMenu;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -18,14 +20,10 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
 
     private List<RewardClaimRequest> requests;
     private final OnRequestActionListener listener;
-    private String currentTabStatus = "pending";
+    private static final String[] TRANSITION_STATUSES = new String[]{"pending", "approved", "fulfilled", "rejected"};
 
     public interface OnRequestActionListener {
-        void onApprove(RewardClaimRequest request);
-
-        void onReject(RewardClaimRequest request);
-
-        void onFulfill(RewardClaimRequest request);
+        void onChangeStatus(RewardClaimRequest request, String newStatus);
     }
 
     public RewardClaimRequestAdapter(List<RewardClaimRequest> requests, OnRequestActionListener listener) {
@@ -33,9 +31,8 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
         this.listener = listener;
     }
 
-    public void updateList(List<RewardClaimRequest> newRequests, String status) {
+    public void updateList(List<RewardClaimRequest> newRequests) {
         this.requests = newRequests;
-        this.currentTabStatus = status;
         notifyDataSetChanged();
     }
 
@@ -48,7 +45,7 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(requests.get(position), listener, currentTabStatus);
+        holder.bind(requests.get(position), listener);
     }
 
     @Override
@@ -62,6 +59,7 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
         TextView rewardTitle;
         TextView rewardType;
         TextView pointsCost;
+        TextView claimStatus;
         TextView requestDate;
         MaterialButton btnPrimary;
         MaterialButton btnSecondary;
@@ -73,15 +71,17 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
             rewardTitle = itemView.findViewById(R.id.text_reward_title);
             rewardType = itemView.findViewById(R.id.text_reward_type);
             pointsCost = itemView.findViewById(R.id.text_points_cost);
+            claimStatus = itemView.findViewById(R.id.text_claim_status);
             requestDate = itemView.findViewById(R.id.text_request_date);
             btnPrimary = itemView.findViewById(R.id.btn_primary_action);
             btnSecondary = itemView.findViewById(R.id.btn_secondary_action);
         }
 
-        public void bind(RewardClaimRequest request, OnRequestActionListener listener, String currentStatus) {
+        public void bind(RewardClaimRequest request, OnRequestActionListener listener) {
             buyerName.setText(request.getBuyerName() != null ? request.getBuyerName() : "Unknown Buyer");
             buyerEmail.setText(request.getBuyerEmail() != null ? request.getBuyerEmail() : "N/A");
             rewardTitle.setText(request.getRewardTitle() != null ? request.getRewardTitle() : "Reward");
+            final String currentStatus = normalizeStatus(request.getStatus());
 
             String type = request.getRewardType() != null ? request.getRewardType() : "custom";
             if ("percent_off".equals(type)) {
@@ -103,24 +103,51 @@ public class RewardClaimRequestAdapter extends RecyclerView.Adapter<RewardClaimR
                 requestDate.setText("N/A");
             }
 
-            if ("pending".equals(currentStatus)) {
-                btnPrimary.setVisibility(View.VISIBLE);
-                btnSecondary.setVisibility(View.VISIBLE);
-                btnPrimary.setText("Approve");
-                btnSecondary.setText("Reject");
-                btnPrimary.setOnClickListener(v -> listener.onApprove(request));
-                btnSecondary.setOnClickListener(v -> listener.onReject(request));
-            } else if ("approved".equals(currentStatus)) {
-                btnPrimary.setVisibility(View.VISIBLE);
-                btnSecondary.setVisibility(View.VISIBLE);
-                btnPrimary.setText("Mark Fulfilled");
-                btnSecondary.setText("Reject");
-                btnPrimary.setOnClickListener(v -> listener.onFulfill(request));
-                btnSecondary.setOnClickListener(v -> listener.onReject(request));
+            claimStatus.setText(formatStatusLabel(currentStatus));
+            if ("approved".equals(currentStatus)) {
+                claimStatus.setBackgroundResource(R.drawable.bg_chip_blue);
+                claimStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.info));
+            } else if ("fulfilled".equals(currentStatus)) {
+                claimStatus.setBackgroundResource(R.drawable.bg_chip_green);
+                claimStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.success));
+            } else if ("rejected".equals(currentStatus)) {
+                claimStatus.setBackgroundResource(R.drawable.bg_chip_red);
+                claimStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.error));
+            } else if ("cancelled".equals(currentStatus)) {
+                claimStatus.setBackgroundResource(R.drawable.bg_chip_gray);
+                claimStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.text_secondary));
             } else {
-                btnPrimary.setVisibility(View.GONE);
-                btnSecondary.setVisibility(View.GONE);
+                claimStatus.setBackgroundResource(R.drawable.bg_chip_orange);
+                claimStatus.setTextColor(ContextCompat.getColor(itemView.getContext(), R.color.warning));
             }
+
+            btnPrimary.setVisibility(View.VISIBLE);
+            btnPrimary.setText("Change Status");
+            btnSecondary.setVisibility(View.GONE);
+            btnPrimary.setOnClickListener(v -> {
+                PopupMenu menu = new PopupMenu(itemView.getContext(), btnPrimary);
+                for (String statusOption : TRANSITION_STATUSES) {
+                    if (statusOption.equals(currentStatus)) continue;
+                    menu.getMenu().add(formatStatusLabel(statusOption));
+                }
+                menu.setOnMenuItemClickListener(menuItem -> {
+                    String label = String.valueOf(menuItem.getTitle());
+                    String targetStatus = label.toLowerCase(Locale.ROOT);
+                    listener.onChangeStatus(request, targetStatus);
+                    return true;
+                });
+                menu.show();
+            });
+        }
+
+        private static String normalizeStatus(String status) {
+            if (status == null || status.trim().isEmpty()) return "pending";
+            return status.trim().toLowerCase(Locale.ROOT);
+        }
+
+        private static String formatStatusLabel(String status) {
+            if (status == null || status.isEmpty()) return "Pending";
+            return Character.toUpperCase(status.charAt(0)) + status.substring(1);
         }
     }
 }

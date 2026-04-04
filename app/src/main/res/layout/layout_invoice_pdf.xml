@@ -271,6 +271,24 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/pdf_reward_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16px"
+                android:visibility="gone">
+                <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Reward Discount" android:textSize="20sp" android:textColor="@color/gray_800"/>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="end">
+                    <TextView android:id="@+id/pdf_reward_discount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹0" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/success"/>
+                    <TextView android:id="@+id/pdf_reward_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="" android:textSize="16sp" android:textColor="@color/gray_500" android:layout_marginTop="4px"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
                 android:id="@+id/pdf_tax_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
