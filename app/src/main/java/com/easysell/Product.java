@@ -51,6 +51,8 @@ public class Product {
     private Map<String, String> customFields;
     //endregion
 
+    private boolean isVisibleInCatalogue = true;
+
     public Product() {}
 
     // --- GETTERS AND SETTERS ---
@@ -263,5 +265,13 @@ public class Product {
 
     public void setCustomFields(Map<String, String> customFields) {
         this.customFields = customFields;
+    }
+
+    public boolean isVisibleInCatalogue() {
+        return isVisibleInCatalogue;
+    }
+
+    public void setVisibleInCatalogue(boolean visibleInCatalogue) {
+        isVisibleInCatalogue = visibleInCatalogue;
     }
 }

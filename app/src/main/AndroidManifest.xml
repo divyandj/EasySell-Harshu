@@ -3,8 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <queries>
+        <package android:name="com.google.android.gms" />
+    </queries>
     <application
+        android:name=".EasySellApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,6 +16,40 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.EasySellHarshu">
+
+
+        <activity
+            android:name=".ProfileActivity"
+            android:parentActivityName=".HomeActivity" />
+
+        <activity
+            android:name=".EditProfileActivity"
+            android:parentActivityName=".ProfileActivity" />
+
+        <service
+            android:name=".MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+
+        <activity
+            android:name=".OrderDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OrdersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SignUpActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FullScreenImageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ProductDetailSellerActivity"
+            android:exported="false" />
         <activity
             android:name=".AddProductActivity"
             android:exported="false" />
@@ -23,7 +60,8 @@
             android:name=".AddCatalogueActivity"
             android:exported="false" />
         <activity
-            android:name=".AddCategoryActivity"
+            android:name=".AnalyticsActivity"
+            android:theme="@style/Theme.Material3.Light.NoActionBar"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"
@@ -31,6 +69,20 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".UserRequestsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FullscreenPhotoActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.NoActionBar" />
+        <activity
+            android:name=".RewardsConfigActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RewardClaimRequestsActivity"
+            android:exported="false"
+            android:parentActivityName=".HomeActivity" />
         <activity
             android:name=".SignInActivity"
             android:exported="true">
@@ -40,6 +92,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 
 </manifest>

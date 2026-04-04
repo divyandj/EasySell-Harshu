@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:fitsSystemWindows="true"
+    tools:context=".ProductDetailSellerActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:fitsSystemWindows="true"
+        app:elevation="1dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:menu="@menu/product_detail_seller_menu"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:navigationIconTint="@color/on_background"
+            app:title="Product Details"
+            app:titleTextAppearance="@style/TextHeadline2"
+            app:titleTextColor="@color/on_background" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/spacing_lg">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardOutlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/visibility_switch"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/spacing_lg"
+                    android:text="Visible in Catalogue"
+                    android:textAppearance="?attr/textAppearanceBody1"
+                    android:textStyle="bold" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <androidx.viewpager2.widget.ViewPager2
+                        android:id="@+id/media_view_pager"
+                        android:layout_width="match_parent"
+                        android:layout_height="400dp" />
+                    <com.google.android.material.tabs.TabLayout
+                        android:id="@+id/media_tab_indicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        app:tabBackground="@drawable/tab_selector"
+                        app:tabGravity="center"
+                        app:tabIndicatorHeight="0dp"
+                        app:tabMaxWidth="16dp" app:tabMode="fixed"    app:tabPaddingEnd="4dp"  app:tabPaddingStart="4dp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:text="Title" />
+                    <TextView
+                        android:id="@+id/product_title_detail"
+                        style="@style/DetailValue"
+                        tools:text="Elegant Summer Dress"/>
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Description" />
+                    <TextView
+                        android:id="@+id/product_description_detail"
+                        style="@style/DetailValue"
+                        android:ellipsize="end"
+                        android:maxLines="5"
+                        tools:text="A beautiful floral print dress perfect for summer occasions. Made from lightweight cotton."/>
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="SKU" />
+                    <TextView
+                        android:id="@+id/product_sku_detail"
+                        style="@style/DetailValue"
+                        tools:text="SUMDRS-FLRL-01"/>
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Tags" />
+                    <TextView
+                        android:id="@+id/product_tags_detail"
+                        style="@style/DetailValue"
+                        tools:text="Summer, Dress, Floral, Cotton"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailSectionHeader"
+                        android:text="Pricing" />
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:text="Base Price" />
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        <TextView
+                            android:id="@+id/product_price_detail"
+                            style="@style/DetailValue"
+                            android:textSize="@dimen/text_lg"
+                            android:textStyle="bold"
+                            tools:text="₹1,299.00"/>
+                        <TextView
+                            android:id="@+id/product_price_unit_detail"
+                            style="@style/DetailValue.Secondary"
+                            android:layout_marginStart="@dimen/spacing_xs"
+                            tools:text="per piece"/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/discounted_price_label"
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Discounted Price"
+                        android:visibility="gone"
+                        tools:visibility="visible"/>
+                    <TextView
+                        android:id="@+id/product_discounted_price_detail"
+                        style="@style/DetailValue.Emphasized"
+                        android:textColor="@color/error"
+                        tools:text="₹999.00 (23% OFF)"
+                        android:visibility="gone"
+                        tools:visibility="visible"/>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailSectionHeader"
+                        android:text="Inventory" />
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:text="Stock Status" />
+                    <TextView
+                        android:id="@+id/stock_status_detail"
+                        style="@style/DetailValue"
+                        tools:text="In Stock (15 available)"/>
+
+                    <TextView
+                        android:id="@+id/moq_detail_label"
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Minimum Order Qty (MOQ)" />
+                    <TextView
+                        android:id="@+id/moq_detail"
+                        style="@style/DetailValue"
+                        tools:text="1"/>
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Out of Stock Options" />
+                    <TextView
+                        android:id="@+id/backorder_detail"
+                        style="@style/DetailValue.Secondary"
+                        tools:text="Allow backorders: Yes"/>
+                    <TextView
+                        android:id="@+id/hide_oos_detail"
+                        style="@style/DetailValue.Secondary"
+                        tools:text="Hide when OOS: No"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/variants_detail_card"
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:visibility="gone"
+                tools:visibility="visible">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailSectionHeader"
+                        android:text="Variants" />
+
+                    <LinearLayout
+                        android:id="@+id/variants_detail_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:orientation="vertical"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailSectionHeader"
+                        android:text="Shipping &amp; Taxes" />
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:text="Weight" />
+                    <TextView
+                        android:id="@+id/weight_detail"
+                        style="@style/DetailValue"
+                        tools:text="0.5 kg"/>
+
+                    <TextView
+                        style="@style/DetailLabel"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:text="Tax Rate" />
+                    <TextView
+                        android:id="@+id/tax_rate_detail"
+                        style="@style/DetailValue"
+                        tools:text="18.0%"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/custom_fields_detail_card"
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing_lg"
+                android:visibility="gone"
+                tools:visibility="visible">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="@dimen/spacing_lg">
+
+                    <TextView
+                        style="@style/DetailSectionHeader"
+                        android:text="Additional Details" />
+
+                    <LinearLayout
+                        android:id="@+id/custom_fields_detail_container"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_md"
+                        android:orientation="vertical"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

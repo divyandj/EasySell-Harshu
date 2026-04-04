@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/media_image_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:contentDescription="Product Media"
+        tools:src="@tools:sample/backgrounds/scenic"/>
+
+    <ImageView
+        android:id="@+id/video_play_icon"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_play_circle"
+        app:tint="@color/white"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:contentDescription="Video indicator"/>
+
+</FrameLayout>

@@ -1,31 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:background="@color/background">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/products_recycler_view"
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        android:background="@color/white"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:paddingHorizontal="@dimen/spacing_md"
+            app:title="Catalogue"
+            app:titleTextAppearance="@style/TextHeadline2"
+            app:titleTextColor="@color/on_background"
+            app:navigationIcon="@drawable/ic_menu"
+            app:navigationIconTint="@color/on_background"
+            app:menu="@menu/main_menu" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="4dp" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <TextView
-        android:id="@+id/empty_view_text_products"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="No products yet. Add one!"
-        android:layout_gravity="center"
-        android:visibility="gone"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clipToPadding="false"
+            android:paddingBottom="120dp">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/CardElevated"
+                    android:layout_marginBottom="@dimen/spacing_md"
+                    app:cardBackgroundColor="@color/primary">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="@dimen/spacing_xl">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="@dimen/spacing_lg">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Catalogue Overview"
+                                    android:textColor="@color/white"
+                                    android:alpha="0.9"
+                                    style="@style/TextCaption"
+                                    android:layout_marginBottom="4dp" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Your Store Stats"
+                                    android:textColor="@color/white"
+                                    style="@style/TextHeadline2" />
+                            </LinearLayout>
+
+                            <View
+                                android:layout_width="48dp"
+                                android:layout_height="48dp"
+                                android:background="@drawable/stats_accent_bg"
+                                android:alpha="0.15" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="@dimen/spacing_lg">
+
+                            <TextView
+                                android:id="@+id/text_total_products_count"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="--"
+                                android:textColor="@color/white"
+                                android:textSize="36sp"
+                                android:textStyle="bold"
+                                android:layout_marginEnd="@dimen/spacing_md" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Products\nListed"
+                                android:textColor="@color/white"
+                                android:alpha="0.9"
+                                style="@style/TextBody2" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_preview_catalogue"
+                                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                                android:layout_width="0dp"
+                                android:layout_height="52dp"
+                                android:layout_weight="1"
+                                android:layout_marginEnd="8dp"
+                                android:text="Preview"
+                                android:textColor="@color/white"
+                                app:strokeColor="@color/white"
+                                app:strokeWidth="1dp"
+                                app:icon="@drawable/ic_visibility"
+                                app:iconTint="@color/white"
+                                app:cornerRadius="8dp"/>
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btn_share_catalogue"
+                                style="@style/Widget.MaterialComponents.Button"
+                                android:layout_width="0dp"
+                                android:layout_height="52dp"
+                                android:layout_weight="1.2"
+                                android:layout_marginStart="8dp"
+                                android:text="Share Link"
+                                android:textColor="@color/primary"
+                                android:textStyle="bold"
+                                app:backgroundTint="@color/white"
+                                app:icon="@drawable/ic_share"
+                                app:iconTint="@color/primary"
+                                app:cornerRadius="8dp"/>
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/divider_light"
+                android:layout_marginHorizontal="@dimen/spacing_lg" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/spacing_lg">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Your Products"
+                    style="@style/TextHeadline2"
+                    android:layout_marginBottom="@dimen/spacing_sm" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Manage inventory and visibility"
+                    style="@style/TextBody2" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/products_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/background"
+                android:clipToPadding="false"
+                android:paddingHorizontal="@dimen/spacing_md"
+                android:paddingVertical="@dimen/spacing_md" />
+
+            <LinearLayout
+                android:id="@+id/empty_state_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:padding="@dimen/spacing_3xl"
+                android:visibility="gone">
+
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginBottom="@dimen/spacing_2xl"
+                    android:background="@drawable/empty_state_circle_bg">
+                    <ImageView
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_empty_products"
+                        app:tint="@color/primary" />
+                </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="No products yet"
+                    style="@style/TextHeadline2"
+                    android:layout_marginBottom="8dp"/>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_add_first_product"
+                    style="@style/ButtonPrimary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add Your First Product" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_product"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:src="@drawable/ic_add"
-        app:tint="@android:color/white"
-        android:contentDescription="Add Product" />
+        android:layout_margin="@dimen/spacing_2xl"
+        android:text="Add Product"
+        app:icon="@drawable/ic_add"
+        app:iconTint="@android:color/white"
+        app:backgroundTint="@color/accent"
+        android:textColor="@color/text_on_accent" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

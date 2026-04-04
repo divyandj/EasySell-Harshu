@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EasySell-Harshu</string>
+    <string name="app_name">Vyparsetu</string>
     <string-array name="price_units_array">
         <item>per piece</item>
         <item>per set</item>
@@ -12,5 +12,14 @@
         <item>g</item>
         <item>lb</item>
         <item>oz</item>
+    </string-array>
+
+
+    <string-array name="order_status_options">
+        <item>Placed</item>
+        <item>Processing</item>
+        <item>Shipped</item>
+        <item>Delivered</item>
+        <item>Cancelled</item>
     </string-array>
 </resources>

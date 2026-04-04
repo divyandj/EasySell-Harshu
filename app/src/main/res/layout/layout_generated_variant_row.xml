@@ -4,114 +4,193 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardUseCompatPadding="true"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="0dp"
     app:strokeWidth="1dp"
-    app:strokeColor="@color/material_on_surface_stroke">
+    app:strokeColor="@color/border"
+    app:cardBackgroundColor="@color/surface">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <ImageButton
-            android:id="@+id/button_remove_variant"
-            android:layout_width="wrap_content"
+        <!-- Header Row: Image + Name + Remove -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Remove Variant"
-            android:src="@drawable/ic_remove_circle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <ImageView
-            android:id="@+id/variant_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:background="#EFEFEF"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_add_photo"
-            android:contentDescription="Variant Image"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <!-- Variant Image -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/gray_100">
 
-        <TextView
-            android:id="@+id/variant_name_text"
-            android:layout_width="0dp"
+                <ImageView
+                    android:id="@+id/variant_image"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_add_photo"
+                    android:contentDescription="Variant Image"
+                    app:tint="@color/text_tertiary" />
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Name + Change Image Button -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/variant_name_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    tools:text="Red / Large" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_select_variant_image"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Change Image"
+                    android:textAllCaps="false"
+                    android:textSize="13sp"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:minWidth="0dp"
+                    app:icon="@drawable/ic_image"
+                    app:iconSize="18dp"
+                    app:iconGravity="textStart"
+                    app:iconPadding="4dp"
+                    android:textColor="@color/primary"/>
+
+            </LinearLayout>
+
+            <!-- Remove Button -->
+            <ImageButton
+                android:id="@+id/button_remove_variant"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Remove Variant"
+                android:src="@drawable/ic_remove_circle"
+                app:tint="@color/error" />
+
+        </LinearLayout>
+
+        <!-- Divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:background="@color/divider"/>
+
+        <!-- Fields Row 1: Price Adjustment + Quantity -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:textAppearance="?attr/textAppearanceBody1"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toStartOf="@id/button_remove_variant"
-            app:layout_constraintStart_toEndOf="@id/variant_image"
-            app:layout_constraintTop_toTopOf="@id/variant_image"
-            tools:text="Red / Large" />
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
-        <Button
-            android:id="@+id/button_select_variant_image"
-            style="@style/Widget.MaterialComponents.Button.TextButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingStart="0dp"
-            android:paddingEnd="0dp"
-            android:text="Change Image"
-            app:layout_constraintStart_toStartOf="@id/variant_name_text"
-            app:layout_constraintTop_toBottomOf="@id/variant_name_text" />
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:hint="Price Adjustment"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:prefixText="+/- ₹ "
+                app:helperText="Extra cost or discount"
+                app:helperTextTextColor="@color/text_tertiary">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/variant_price_modifier_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned|numberDecimal"
+                    android:text="0.0"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:padding="16dp"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:hint="Quantity"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxStrokeColor="@color/primary"
+                app:hintTextColor="@color/primary"
+                app:helperText="Stock amount"
+                app:helperTextTextColor="@color/text_tertiary">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/variant_quantity_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number"
+                    android:textSize="15sp"
+                    android:textColor="@color/text_primary"
+                    android:padding="16dp"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <!-- Field Row 2: SKU Override -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/variant_price_modifier_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:layout_marginEnd="8dp"
-            android:hint="Price Adjustment"
-            app:prefixText="+/- ₹"
-            app:layout_constraintEnd_toStartOf="@id/variant_quantity_layout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/variant_image">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/variant_price_modifier_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="numberSigned|numberDecimal"
-                android:text="0.0"/>
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/variant_quantity_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:hint="Quantity"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/variant_price_modifier_layout"
-            app:layout_constraintTop_toTopOf="@id/variant_price_modifier_layout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/variant_quantity_edit_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/variant_sku_override_layout"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:hint="SKU Override (optional)"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/variant_price_modifier_layout">
+            android:hint="SKU Override (Optional)"
+            app:boxCornerRadiusTopStart="12dp"
+            app:boxCornerRadiusTopEnd="12dp"
+            app:boxCornerRadiusBottomStart="12dp"
+            app:boxCornerRadiusBottomEnd="12dp"
+            app:boxStrokeColor="@color/primary"
+            app:hintTextColor="@color/primary"
+            app:helperText="Custom SKU for this variant"
+            app:helperTextTextColor="@color/text_tertiary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/variant_sku_override_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textCapCharacters" />
+                android:inputType="textCapCharacters"
+                android:textSize="15sp"
+                android:textColor="@color/text_primary"
+                android:padding="16dp"/>
+
         </com.google.android.material.textfield.TextInputLayout>
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
+
 </com.google.android.material.card.MaterialCardView>

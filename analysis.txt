@@ -1,0 +1,22 @@
+Based on analyzing the code in both directories, here is the exact working and purpose of both the Android app and the website. It is a complete e-commerce ecosystem designed to let sellers create their own storefronts and let buyers purchase from them.
+
+1. Android App (c:\...\app) - The Seller Dashboard
+Purpose: This is the native Android application used exclusively by the Sellers/Store Owners to manage their business. How it works:
+
+Store Management: Sellers log in (via Google or Email), set up their profile, and claim a unique storeHandle (e.g., mystore).
+Inventory: They can create Catalogues (AddCatalogueActivity) and add Products to them to build their inventory.
+Order Tracking & Analytics: HomeActivity serves as the main dashboard showing total categories, total orders, pending user requests, and analytics. They can click into OrdersActivity to process incoming orders.
+Real-time Notifications: It uses Firebase Cloud Messaging to subscribe to topics like admin_orders_{storeHandle}. When a buyer places an order on the website, the seller's phone immediately receives a push notification and can view details in OrderDetailActivity.
+2. Website (c:\...\EasySell-WEB) - The Buyer Storefront & Backend
+The web folder is split into two parts: a React frontend (easysell-webapp) and a Node/Express backend (easysell-backend).
+
+A. easysell-webapp (Frontend / Buyer Facing) Purpose: This is the responsive web application where Buyers browse and purchase items. How it works:
+
+Dynamic Subdomains: App.js checks the URL subdomain. If the user visits the root domain, they see the main HomePage (likely a landing page promoting EasySell itself). If they visit a subdomain like mystore.mmproperty.in, it instantly loads the StorefrontPage tailored for that specific seller's storeHandle.
+Shopping Flow: Buyers can view Catalogues (CataloguePage), look at Product Details (ProductDetailPage), add items to their Cart, and proceed to Checkout (CheckoutPage).
+User Accounts: Buyers can log in (LoginPage), view their ProfilePage, and track their purchases using OrderHistoryPage and OrderTrackingPage. All data is synced with Firebase.
+B. easysell-backend (Backend / Services) Purpose: A lightweight API server bridging the gap between web actions and seller notifications/analytics. How it works:
+
+Notifications: When a buyer checks out on the web, the frontend hits /api/notify-order. The backend takes this and sends a push notification payload via Firebase Admin SDK directly to the seller's Android App.
+Analytics Tracking: When a buyer visits a storefront or abandons a cart, the webapp pings routes like /api/analytics/visit or /api/analytics/abandoned. The backend logs this data so the seller can view their store's performance numbers inside the Android App's Analytics dashboard.
+In Summary: The Android App is the control center for the seller to provide inventory, process orders, and view stats. The web project serves as the customer-facing storefront (where actual buying happens) and powers the backend APIs to send alerts and track analytics for the seller.

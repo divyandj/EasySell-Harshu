@@ -1,14 +1,19 @@
 package com.easysell;
 
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import android.net.Uri;
 
-// A simple Singleton to hold session data
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+/**
+ * A simple Singleton to hold session data.
+ * Now backed by FirebaseAuth instead of GoogleSignInAccount.
+ */
 public class SessionManager {
     private static SessionManager instance;
-    private GoogleSignInAccount account;
-    private String accessToken;
 
-    private SessionManager() {}
+    private SessionManager() {
+    }
 
     public static synchronized SessionManager getInstance() {
         if (instance == null) {
@@ -17,24 +22,49 @@ public class SessionManager {
         return instance;
     }
 
-    public GoogleSignInAccount getAccount() {
-        return account;
+    /**
+     * Returns the currently signed-in FirebaseUser, or null if not signed in.
+     */
+    public FirebaseUser getFirebaseUser() {
+        return FirebaseAuth.getInstance().getCurrentUser();
     }
 
-    public void setAccount(GoogleSignInAccount account) {
-        this.account = account;
+    /**
+     * Convenience: returns the Firebase UID, or null if not signed in.
+     */
+    public String getUserId() {
+        FirebaseUser user = getFirebaseUser();
+        return user != null ? user.getUid() : null;
     }
 
-    public String getAccessToken() {
-        return accessToken;
+    /**
+     * Convenience: returns the display name from the Firebase user profile.
+     */
+    public String getDisplayName() {
+        FirebaseUser user = getFirebaseUser();
+        return user != null ? user.getDisplayName() : null;
     }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    /**
+     * Convenience: returns the photo URL from the Firebase user profile.
+     */
+    public Uri getPhotoUrl() {
+        FirebaseUser user = getFirebaseUser();
+        return user != null ? user.getPhotoUrl() : null;
     }
 
+    /**
+     * Convenience: returns the email from the Firebase user profile.
+     */
+    public String getEmail() {
+        FirebaseUser user = getFirebaseUser();
+        return user != null ? user.getEmail() : null;
+    }
+
+    /**
+     * Signs out the user from FirebaseAuth.
+     */
     public void clear() {
-        account = null;
-        accessToken = null;
+        FirebaseAuth.getInstance().signOut();
     }
 }

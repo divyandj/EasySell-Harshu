@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary_light</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorError">@color/error</item>
+        <item name="android:colorBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+
+    <style name="TextDisplay1">
+        <item name="android:textSize">@dimen/text_3xl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="TextDisplay2">
+        <item name="android:textSize">@dimen/text_2xl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <style name="TextHeadline1">
+        <item name="android:textSize">@dimen/text_2xl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextHeadline2">
+        <item name="android:textSize">@dimen/text_xl</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextHeadline3">
+        <item name="android:textSize">@dimen/text_lg</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="TextBody1">
+        <item name="android:textSize">@dimen/text_base</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="TextBody2">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="TextCaption">
+        <item name="android:textSize">@dimen/text_xs</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <style name="TextLabel">
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/gray_700</item>
+    </style>
+
+    <style name="DetailSectionHeader" parent="TextHeadline3">
+        <item name="android:layout_marginBottom">@dimen/spacing_sm</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DetailLabel" parent="TextCaption">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:layout_marginBottom">@dimen/spacing_xs</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DetailValue" parent="TextBody1">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="DetailValue.Secondary">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+    </style>
+
+    <style name="DetailValue.Emphasized">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="ButtonPrimary" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="android:paddingVertical">@dimen/spacing_md</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_lg</item>
+        <item name="backgroundTint">@color/primary</item>
+    </style>
+
+    <style name="ButtonSecondary" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+        <item name="strokeColor">@color/border</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="android:paddingVertical">@dimen/spacing_md</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_lg</item>
+    </style>
+
+    <style name="ButtonTertiary" parent="Widget.Material3.Button.TextButton">
+        <item name="android:textColor">@color/primary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">@dimen/text_sm</item>
+    </style>
+
+    <style name="ButtonDanger" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="backgroundTint">@color/error</item>
+    </style>
+
+    <style name="ButtonSuccess" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">@dimen/radius_lg</item>
+        <item name="backgroundTint">@color/success</item>
+    </style>
+
+    <style name="CardElevated" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardCornerRadius">@dimen/radius_lg</item>
+        <item name="cardElevation">2dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+    </style>
+
+    <style name="CardOutlined" parent="Widget.Material3.CardView.Outlined">
+        <item name="cardCornerRadius">@dimen/radius_lg</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/surface</item>
+        <item name="strokeColor">@color/border</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">@dimen/radius_md</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/radius_md</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/radius_md</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/radius_md</item>
+        <item name="boxStrokeColor">@color/border</item>
+        <item name="boxStrokeWidth">1dp</item>
+    </style>
+
+    <style name="EasySellStatusChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_xs</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:paddingHorizontal">@dimen/spacing_md</item>
+        <item name="android:paddingVertical">@dimen/spacing_xs</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_chip_gray</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+</resources>

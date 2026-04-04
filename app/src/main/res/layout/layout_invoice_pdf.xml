@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/invoice_root"
+    android:layout_width="2480px"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/white"
+    android:padding="80px">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="40px">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/pdf_seller_logo"
+                android:layout_width="140px"
+                android:layout_height="140px"
+                android:src="@drawable/ic_store"
+                android:scaleType="fitCenter"
+                android:layout_marginEnd="30px"
+                android:visibility="gone"/>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/pdf_header_business_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="YOUR BUSINESS"
+                    android:textSize="40sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/primary"
+                    android:letterSpacing="0.05"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Innovating for You"
+                    android:textSize="20sp"
+                    android:textColor="@color/gray_600"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="end">
+
+            <TextView
+                android:id="@+id/pdf_invoice_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TAX INVOICE"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/pdf_order_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="#ORD-2025-001"
+                android:textSize="20sp"
+                android:textColor="@color/gray_800"
+                android:layout_marginTop="8px"/>
+
+            <TextView
+                android:id="@+id/pdf_order_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dec 28, 2025"
+                android:textSize="20sp"
+                android:textColor="@color/gray_800"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="2px" android:background="#333333" android:layout_marginBottom="40px"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:baselineAligned="false"
+        android:layout_marginBottom="50px">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingEnd="40px">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SOLD BY"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#666666"
+                android:layout_marginBottom="8px"/>
+
+            <TextView
+                android:id="@+id/pdf_seller_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Business Name"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:textSize="22sp"/>
+
+            <TextView
+                android:id="@+id/pdf_seller_address_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Address Line 1..."
+                android:textColor="@color/gray_800"
+                android:textSize="20sp"
+                android:lineSpacingExtra="4px"
+                android:layout_marginTop="6px"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingStart="40px">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BILL TO"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#666666"
+                android:layout_marginBottom="8px"/>
+
+            <TextView
+                android:id="@+id/pdf_customer_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Customer Name"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:textSize="22sp"/>
+
+            <TextView
+                android:id="@+id/pdf_customer_details"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Address Line 1..."
+                android:textColor="@color/gray_800"
+                android:textSize="20sp"
+                android:lineSpacingExtra="4px"
+                android:layout_marginTop="6px"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#E0E0E0"
+        android:weightSum="12">
+        <TextView android:layout_width="0dp" android:layout_weight="1.5" android:layout_height="match_parent" android:text="IMG" android:textStyle="bold" android:textSize="18sp" android:textColor="@color/black" android:gravity="center" android:padding="16px"/>
+        <View android:layout_width="2px" android:layout_height="match_parent" android:background="#999999"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="4" android:layout_height="match_parent" android:text="DESCRIPTION" android:textStyle="bold" android:textSize="18sp" android:textColor="@color/black" android:gravity="center_vertical" android:padding="16px"/>
+        <View android:layout_width="2px" android:layout_height="match_parent" android:background="#999999"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:text="QTY" android:textStyle="bold" android:gravity="center" android:textSize="18sp" android:textColor="@color/black" android:padding="16px"/>
+        <View android:layout_width="2px" android:layout_height="match_parent" android:background="#999999"/>
+
+        <TextView android:layout_width="0dp" android:layout_weight="2" android:layout_height="match_parent" android:text="RATE" android:textStyle="bold" android:gravity="end|center_vertical" android:textSize="18sp" android:textColor="@color/black" android:padding="16px"/>
+        <View android:layout_width="2px" android:layout_height="match_parent" android:background="#999999"/>
+
+        <LinearLayout android:id="@+id/pdf_header_tax_container" android:layout_width="0dp" android:layout_weight="1.5" android:layout_height="match_parent" android:orientation="horizontal">
+            <TextView android:id="@+id/pdf_header_tax" android:layout_width="0dp" android:layout_weight="1" android:layout_height="match_parent" android:text="TAX" android:textStyle="bold" android:gravity="end|center_vertical" android:textSize="18sp" android:textColor="@color/black" android:padding="16px"/>
+            <View android:layout_width="2px" android:layout_height="match_parent" android:background="#999999"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="0dp" android:layout_weight="2" android:layout_height="match_parent" android:text="TOTAL" android:textStyle="bold" android:gravity="end|center_vertical" android:textSize="18sp" android:textColor="@color/black" android:padding="16px"/>
+    </LinearLayout>
+
+    <View android:layout_width="match_parent" android:layout_height="2px" android:background="#999999"/>
+
+    <LinearLayout
+        android:id="@+id/pdf_items_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:minHeight="500px"/>
+
+    <View android:layout_width="match_parent" android:layout_height="2px" android:background="#000000"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="40px">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="7"
+            android:orientation="vertical"
+            android:paddingEnd="60px">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Amount in Words:"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/gray_600"/>
+            <TextView
+                android:id="@+id/pdf_amount_words"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Zero Only"
+                android:textSize="18sp"
+                android:textStyle="italic"
+                android:textColor="@color/black"
+                android:layout_marginBottom="30px"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bank Details:"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="invisible"
+                android:textColor="@color/gray_600"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bank: HDFC Bank\nA/C: 50100012345678\nIFSC: HDFC0000123"
+                android:textSize="18sp"
+                android:visibility="invisible"
+                android:textColor="@color/gray_800"
+                android:layout_marginBottom="30px"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12px">
+                <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Subtotal" android:textSize="20sp" android:textColor="@color/gray_800"/>
+                <TextView android:id="@+id/pdf_subtotal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹0" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/black"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pdf_tax_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16px">
+                <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Tax (GST 18%)" android:textSize="20sp" android:textColor="@color/gray_800"/>
+                <TextView android:id="@+id/pdf_tax" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹0" android:textSize="20sp" android:textStyle="bold" android:textColor="@color/black"/>
+            </LinearLayout>
+
+            <View android:layout_width="match_parent" android:layout_height="1px" android:background="#DDDDDD" android:layout_marginBottom="16px"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#E8F4FD"
+                android:padding="16px">
+                <TextView android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="GRAND TOTAL" android:textStyle="bold" android:textSize="24sp" android:textColor="@color/black"/>
+                <TextView android:id="@+id/pdf_total" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹0" android:textStyle="bold" android:textSize="24sp" android:textColor="@color/primary"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="end"
+                android:layout_marginTop="60px">
+
+                <ImageView
+                    android:id="@+id/pdf_signature_image"
+                    android:layout_width="200px"
+                    android:layout_height="100px"
+                    android:src="@drawable/ic_image_placeholder"
+                    android:scaleType="fitCenter"
+                    android:layout_marginBottom="10px"
+                    android:visibility="gone"/>
+
+                <TextView
+                    android:id="@+id/pdf_seller_name_footer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="For Business Name"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+                <View android:layout_width="300px" android:layout_height="1px" android:background="@color/black" android:layout_marginTop="10px"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Authorized Signatory"
+                    android:textSize="16sp"
+                    android:textColor="@color/gray_600"
+                    android:layout_marginTop="8px"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

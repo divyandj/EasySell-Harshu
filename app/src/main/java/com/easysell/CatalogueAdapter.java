@@ -1,11 +1,18 @@
 package com.easysell;
 
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+
 import java.util.List;
 
 public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.CatalogueViewHolder> {
@@ -15,6 +22,8 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
 
     public interface OnCatalogueClickListener {
         void onCatalogueClick(Catalogue catalogue);
+
+        void onOptionsClick(Catalogue catalogue, View anchor);
     }
 
     public CatalogueAdapter(List<Catalogue> catalogueList, OnCatalogueClickListener listener) {
@@ -42,14 +51,49 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
 
     static class CatalogueViewHolder extends RecyclerView.ViewHolder {
         TextView nameTextView;
+        ImageView coverImageView;
+        ImageView optionsIcon;
+
         public CatalogueViewHolder(@NonNull View itemView) {
             super(itemView);
             nameTextView = itemView.findViewById(R.id.catalogue_name_text_view);
+            coverImageView = itemView.findViewById(R.id.catalogue_image_view);
+            optionsIcon = itemView.findViewById(R.id.catalogue_options_icon);
         }
 
         public void bind(final Catalogue catalogue, final OnCatalogueClickListener listener) {
             nameTextView.setText(catalogue.getName());
+
+            // --- Image Loading Logic ---
+            if (catalogue.getImageUrl() != null && !catalogue.getImageUrl().isEmpty()) {
+                // 1. If we have a URL, remove the gray tint so the photo shows in full color
+                coverImageView.setImageTintList(null);
+
+                // 2. Remove the padding so the photo fills the card edge-to-edge
+                coverImageView.setPadding(0, 0, 0, 0);
+
+                // 3. Load with Glide
+                Glide.with(itemView.getContext())
+                        .load(catalogue.getImageUrl())
+                        .centerCrop()
+                        .placeholder(R.drawable.ic_category)
+                        .into(coverImageView);
+            } else {
+                // --- Reset to Default Icon State (Important for RecyclerView recycling) ---
+                coverImageView.setImageResource(R.drawable.ic_category);
+
+                // Restore Gray Tint
+                coverImageView.setImageTintList(ColorStateList.valueOf(Color.parseColor("#5B5FFF")));
+
+                // Restore Padding (18dp converted to pixels)
+                int paddingDp = 18;
+                float density = itemView.getContext().getResources().getDisplayMetrics().density;
+                int paddingPixel = (int) (paddingDp * density);
+                coverImageView.setPadding(paddingPixel, paddingPixel, paddingPixel, paddingPixel);
+            }
+
             itemView.setOnClickListener(v -> listener.onCatalogueClick(catalogue));
+            optionsIcon.setOnClickListener(v -> listener.onOptionsClick(catalogue, v));
         }
     }
 }
