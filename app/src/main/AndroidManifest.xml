@@ -80,6 +80,10 @@
             android:name=".RewardsConfigActivity"
             android:exported="false" />
         <activity
+            android:name=".RewardClaimRequestsActivity"
+            android:exported="false"
+            android:parentActivityName=".HomeActivity" />
+        <activity
             android:name=".SignInActivity"
             android:exported="true">
             <intent-filter>

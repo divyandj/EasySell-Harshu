@@ -202,6 +202,11 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             startActivity(intent);
         });
 
+        binding.rewardClaimsCard.setOnClickListener(view -> {
+            Intent intent = new Intent(HomeActivity.this, RewardClaimRequestsActivity.class);
+            startActivity(intent);
+        });
+
         binding.profileIcon.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, ProfileActivity.class);
             startActivity(intent);
