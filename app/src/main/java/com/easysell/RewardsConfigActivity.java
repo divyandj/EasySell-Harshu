@@ -38,6 +38,7 @@ public class RewardsConfigActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getDelegate().setLocalNightMode(androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO);
         super.onCreate(savedInstanceState);
         binding = ActivityRewardsConfigBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -190,6 +191,9 @@ public class RewardsConfigActivity extends AppCompatActivity {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_add_reward, null);
         dialog.setContentView(view);
+        try {
+            dialog.getBehavior().setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+        } catch (Exception e) { /* safe fallback */ }
 
         TextInputEditText etTitle = view.findViewById(R.id.et_reward_title);
         TextInputEditText etDesc = view.findViewById(R.id.et_reward_description);
