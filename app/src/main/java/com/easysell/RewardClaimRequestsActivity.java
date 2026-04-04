@@ -178,54 +178,20 @@ public class RewardClaimRequestsActivity extends AppCompatActivity implements Re
 
     @Override
     public void onApprove(RewardClaimRequest request) {
-        if (request.getDocId() == null || request.getBuyerUid() == null || request.getBuyerUid().isEmpty()) return;
+        if (request.getDocId() == null) return;
 
-        DocumentReference claimRef = db.collection("reward_claim_requests").document(request.getDocId());
-        DocumentReference pointsRef = db.collection("buyer_points").document(request.getBuyerUid() + "__" + currentStoreHandle);
-
-        db.runTransaction((Transaction.Function<Void>) transaction -> {
-            DocumentSnapshot claimSnap = transaction.get(claimRef);
-            if (!claimSnap.exists()) {
-                throw new RuntimeException("Claim request not found.");
-            }
-
-            String currentStatus = claimSnap.getString("status");
-            if ("approved".equals(currentStatus) || "fulfilled".equals(currentStatus)) {
-                throw new RuntimeException("Claim already processed.");
-            }
-
-            DocumentSnapshot pointsSnap = transaction.get(pointsRef);
-            long currentPoints = 0;
-            long totalRedeemed = 0;
-            if (pointsSnap.exists()) {
-                Long pointsVal = pointsSnap.getLong("points");
-                Long redeemedVal = pointsSnap.getLong("totalRedeemed");
-                currentPoints = pointsVal != null ? pointsVal : 0;
-                totalRedeemed = redeemedVal != null ? redeemedVal : 0;
-            }
-
-            long pointsCost = request.getPointsCost() != null ? request.getPointsCost() : 0;
-            if (currentPoints < pointsCost) {
-                throw new RuntimeException("Buyer has insufficient points.");
-            }
-
-            transaction.update(pointsRef,
-                    "points", currentPoints - pointsCost,
-                    "totalRedeemed", totalRedeemed + pointsCost,
-                    "lastRedeemedAt", FieldValue.serverTimestamp());
-
-            transaction.update(claimRef,
-                    "status", "approved",
-                    "approvedAt", FieldValue.serverTimestamp(),
-                    "approvedBy", currentSellerUid);
-
-            return null;
-        }).addOnSuccessListener(unused -> {
-            Toast.makeText(this, "Claim approved and points deducted.", Toast.LENGTH_SHORT).show();
-            loadRequests(currentFilterStatus);
-        }).addOnFailureListener(e -> {
-            Toast.makeText(this, "Approval failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        });
+        db.collection("reward_claim_requests").document(request.getDocId())
+                .update(
+                        "status", "approved",
+                        "approvedAt", FieldValue.serverTimestamp(),
+                        "approvedBy", currentSellerUid
+                )
+                .addOnSuccessListener(unused -> {
+                    Toast.makeText(this, "Claim approved.", Toast.LENGTH_SHORT).show();
+                    loadRequests(currentFilterStatus);
+                }).addOnFailureListener(e -> {
+                    Toast.makeText(this, "Approval failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 
     @Override
@@ -255,18 +221,53 @@ public class RewardClaimRequestsActivity extends AppCompatActivity implements Re
     private void updateStatus(RewardClaimRequest request, String newStatus) {
         if (request.getDocId() == null) return;
 
-        db.collection("reward_claim_requests").document(request.getDocId())
-                .update(
-                        "status", newStatus,
-                        "updatedAt", FieldValue.serverTimestamp(),
-                        "updatedBy", currentSellerUid
-                )
-                .addOnSuccessListener(unused -> {
-                    Toast.makeText(this, "Claim " + newStatus + ".", Toast.LENGTH_SHORT).show();
-                    loadRequests(currentFilterStatus);
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        DocumentReference claimRef = db.collection("reward_claim_requests").document(request.getDocId());
+        DocumentReference pointsRef = db.collection("buyer_points").document(request.getBuyerUid() + "__" + currentStoreHandle);
+
+        db.runTransaction((Transaction.Function<Void>) transaction -> {
+            DocumentSnapshot claimSnap = transaction.get(claimRef);
+            if (!claimSnap.exists()) {
+                throw new RuntimeException("Claim request not found.");
+            }
+
+            Boolean deductedAtRequest = claimSnap.getBoolean("pointsDeductedAtRequest");
+            String status = claimSnap.getString("status");
+            long pointsCost = request.getPointsCost() != null ? request.getPointsCost() : 0;
+
+            if ("rejected".equals(newStatus)
+                    && Boolean.TRUE.equals(deductedAtRequest)
+                    && ("pending".equals(status) || "approved".equals(status))
+                    && request.getBuyerUid() != null
+                    && !request.getBuyerUid().isEmpty()) {
+
+                DocumentSnapshot pointsSnap = transaction.get(pointsRef);
+                long currentPoints = 0;
+                long totalRedeemed = 0;
+                if (pointsSnap.exists()) {
+                    Long pointsVal = pointsSnap.getLong("points");
+                    Long redeemedVal = pointsSnap.getLong("totalRedeemed");
+                    currentPoints = pointsVal != null ? pointsVal : 0;
+                    totalRedeemed = redeemedVal != null ? redeemedVal : 0;
+                }
+
+                long adjustedRedeemed = Math.max(0, totalRedeemed - pointsCost);
+                java.util.HashMap<String, Object> pointsUpdate = new java.util.HashMap<>();
+                pointsUpdate.put("points", currentPoints + pointsCost);
+                pointsUpdate.put("totalRedeemed", adjustedRedeemed);
+                pointsUpdate.put("lastUpdatedAt", FieldValue.serverTimestamp());
+                transaction.set(pointsRef, pointsUpdate, com.google.firebase.firestore.SetOptions.merge());
+            }
+
+            transaction.update(claimRef,
+                    "status", newStatus,
+                    "updatedAt", FieldValue.serverTimestamp(),
+                    "updatedBy", currentSellerUid);
+            return null;
+        }).addOnSuccessListener(unused -> {
+            Toast.makeText(this, "Claim " + newStatus + ".", Toast.LENGTH_SHORT).show();
+            loadRequests(currentFilterStatus);
+        }).addOnFailureListener(e -> {
+            Toast.makeText(this, "Update failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        });
     }
 }
