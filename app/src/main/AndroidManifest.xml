@@ -36,6 +36,11 @@
 
 
         <activity
+            android:name=".CustomerDetailsActivity"
+            android:exported="false"
+            android:parentActivityName=".OrderDetailActivity" />
+
+        <activity
             android:name=".OrderDetailActivity"
             android:exported="false" />
         <activity
@@ -63,6 +68,10 @@
             android:name=".AnalyticsActivity"
             android:theme="@style/Theme.Material3.Light.NoActionBar"
             android:exported="false" />
+        <activity
+            android:name=".PaymentAdminActivity"
+            android:exported="false"
+            android:parentActivityName=".HomeActivity" />
         <activity
             android:name=".HomeActivity"
             android:exported="false" />

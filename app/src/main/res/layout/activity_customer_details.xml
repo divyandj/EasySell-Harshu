@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/surface"
+        app:title="Customer Details"
+        app:titleTextColor="@color/text_primary"
+        app:navigationIcon="@drawable/ic_arrow_back"
+        app:navigationIconTint="@color/text_primary" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="14dp"
+        android:visibility="gone" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <androidx.cardview.widget.CardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:id="@+id/textCustomerName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextHeadline1"
+                        android:text="Customer"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/textCustomerUserId"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="ID: -" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="Email" />
+
+                    <TextView
+                        android:id="@+id/textCustomerEmail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody1"
+                        android:text="-" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="Phone" />
+
+                    <TextView
+                        android:id="@+id/textCustomerPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody1"
+                        android:text="-" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="WhatsApp" />
+
+                    <TextView
+                        android:id="@+id/textCustomerWhatsapp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody1"
+                        android:text="-" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="Address" />
+
+                    <TextView
+                        android:id="@+id/textCustomerAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody1"
+                        android:text="-" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextCaption"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/text_secondary"
+                        android:text="Store Handle" />
+
+                    <TextView
+                        android:id="@+id/textCustomerStoreHandle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody1"
+                        android:text="-" />
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextHeadline3"
+                        android:text="Customer Summary" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/TextBody2"
+                            android:text="Total Orders" />
+
+                        <TextView
+                            android:id="@+id/textStatTotalOrders"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextBody1"
+                            android:text="0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/TextBody2"
+                            android:text="Total Spent" />
+
+                        <TextView
+                            android:id="@+id/textStatTotalSpent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextBody1"
+                            android:text="₹0.00" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/TextBody2"
+                            android:text="Last Order" />
+
+                        <TextView
+                            android:id="@+id/textStatLastOrder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextBody1"
+                            android:text="-" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/TextBody2"
+                            android:text="Payment Records" />
+
+                        <TextView
+                            android:id="@+id/textStatPaymentRecords"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextBody1"
+                            android:text="0" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            style="@style/TextBody2"
+                            android:text="Reconciled Payments" />
+
+                        <TextView
+                            android:id="@+id/textStatReconciledPayments"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/TextBody1"
+                            android:text="0" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/DetailSectionHeader"
+                android:text="Order History" />
+
+            <androidx.cardview.widget.CardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/textNoOrders"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody2"
+                        android:text="No orders found for this customer."
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerOrderHistory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/DetailSectionHeader"
+                android:text="Payment History" />
+
+            <androidx.cardview.widget.CardView
+                style="@style/CardElevated"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:id="@+id/textNoPayments"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        style="@style/TextBody2"
+                        android:text="No payment records found for this customer."
+                        android:textColor="@color/text_secondary"
+                        android:visibility="gone" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerPaymentHistory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false" />
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

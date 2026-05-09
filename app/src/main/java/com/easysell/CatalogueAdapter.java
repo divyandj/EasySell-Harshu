@@ -19,6 +19,7 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
 
     private final List<Catalogue> catalogueList;
     private final OnCatalogueClickListener listener;
+    private int lastAnimatedPosition = -1;
 
     public interface OnCatalogueClickListener {
         void onCatalogueClick(Catalogue catalogue);
@@ -42,6 +43,18 @@ public class CatalogueAdapter extends RecyclerView.Adapter<CatalogueAdapter.Cata
     public void onBindViewHolder(@NonNull CatalogueViewHolder holder, int position) {
         Catalogue catalogue = catalogueList.get(position);
         holder.bind(catalogue, listener);
+
+        if (position > lastAnimatedPosition) {
+            holder.itemView.setAlpha(0f);
+            holder.itemView.setTranslationY(16f);
+            holder.itemView.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(240)
+                    .setStartDelay(Math.min(position * 24L, 140L))
+                    .start();
+            lastAnimatedPosition = position;
+        }
     }
 
     @Override

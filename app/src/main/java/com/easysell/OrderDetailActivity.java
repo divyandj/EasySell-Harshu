@@ -174,7 +174,8 @@ public class OrderDetailActivity extends AppCompatActivity {
 
         if (order.getShippingAddress() != null) {
             Order.ShippingAddress addr = order.getShippingAddress();
-            binding.textCustomerName.setText(addr.getName() != null ? addr.getName() : "Guest");
+            String customerName = addr.getName() != null ? addr.getName() : "Guest";
+            binding.textCustomerName.setText(customerName);
             String phone = addr.getPhone() != null ? addr.getPhone() : "N/A";
             binding.textCustomerPhone.setText(phone);
             if (!phone.equals("N/A")) {
@@ -191,9 +192,12 @@ public class OrderDetailActivity extends AppCompatActivity {
                 String finalAddress = fullAddress;
                 binding.textShippingAddress.setOnClickListener(v -> showAddressOptions(v, finalAddress));
             }
+
+            setupCustomerNameNavigation(order, customerName, phone);
         } else {
             binding.textCustomerName.setText("Unknown Customer");
             binding.textShippingAddress.setText("Address unavailable");
+            setupCustomerNameNavigation(order, "Unknown Customer", null);
         }
 
         if (order.getTransportName() != null && !order.getTransportName().trim().isEmpty()) {
@@ -217,6 +221,18 @@ public class OrderDetailActivity extends AppCompatActivity {
         }
 
         NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("en", "IN"));
+        String paymentStatus = order.getResolvedPaymentStatus();
+        if (paymentStatus == null || paymentStatus.trim().isEmpty()) {
+            binding.textPaymentStatusBadge.setText("NOT AVAILABLE");
+        } else {
+            binding.textPaymentStatusBadge.setText(formatPaymentStatusLabel(paymentStatus));
+        }
+        setPaymentStatusStyle(paymentStatus);
+
+        String utrNumber = order.getResolvedUtrNumber();
+        binding.textPaymentUtr.setText((utrNumber != null && !utrNumber.trim().isEmpty()) ? utrNumber : "-");
+        binding.textPaymentPayableAmount.setText(currencyFormat.format(order.getResolvedPayableAmount()));
+
         binding.textSubtotal.setText(currencyFormat.format(order.getOrderSubtotal()));
 
         double rewardDiscount = order.getRewardDiscount();
@@ -272,6 +288,24 @@ public class OrderDetailActivity extends AppCompatActivity {
             return true;
         });
         popup.show();
+    }
+
+    private void setupCustomerNameNavigation(Order order, String customerName, String customerPhone) {
+        String customerUserId = order != null && order.getUserId() != null ? order.getUserId().trim() : "";
+        if (customerUserId.isEmpty()) {
+            binding.textCustomerName.setOnClickListener(null);
+            binding.textCustomerName.setTextColor(ContextCompat.getColor(this, R.color.text_primary));
+            return;
+        }
+
+        binding.textCustomerName.setTextColor(ContextCompat.getColor(this, R.color.primary));
+        binding.textCustomerName.setOnClickListener(v -> {
+            Intent intent = new Intent(this, CustomerDetailsActivity.class);
+            intent.putExtra(CustomerDetailsActivity.EXTRA_CUSTOMER_USER_ID, customerUserId);
+            intent.putExtra(CustomerDetailsActivity.EXTRA_CUSTOMER_NAME_FALLBACK, customerName);
+            intent.putExtra(CustomerDetailsActivity.EXTRA_CUSTOMER_PHONE_FALLBACK, customerPhone);
+            startActivity(intent);
+        });
     }
 
     private void showAddressOptions(View v, String address) {
@@ -499,6 +533,50 @@ public class OrderDetailActivity extends AppCompatActivity {
         }
         binding.statusBadge.setBackgroundResource(bgRes);
         binding.statusBadge.setTextColor(ContextCompat.getColor(this, colorRes));
+    }
+
+    private String formatPaymentStatusLabel(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return "NOT AVAILABLE";
+        }
+        return status.trim().toUpperCase(Locale.ROOT).replace('_', ' ');
+    }
+
+    private void setPaymentStatusStyle(String status) {
+        int bgRes = R.drawable.bg_chip_gray;
+        int colorRes = R.color.text_secondary;
+
+        String normalized = status != null ? status.trim().toUpperCase(Locale.ROOT) : "";
+        switch (normalized) {
+            case "PENDING":
+            case "UTR_SUBMITTED":
+            case "PAYMENT_UNDER_REVIEW":
+                bgRes = R.drawable.bg_chip_orange;
+                colorRes = R.color.warning;
+                break;
+            case "RECONCILED":
+                bgRes = R.drawable.bg_chip_green;
+                colorRes = R.color.success;
+                break;
+            case "DISPUTED":
+                bgRes = R.drawable.bg_chip_red;
+                colorRes = R.color.error;
+                break;
+            case "EXPIRED":
+            case "CANCELLED_BY_BUYER":
+                bgRes = R.drawable.bg_chip_gray;
+                colorRes = R.color.text_secondary;
+                break;
+            default:
+                if (!normalized.isEmpty()) {
+                    bgRes = R.drawable.bg_chip_blue;
+                    colorRes = R.color.info;
+                }
+                break;
+        }
+
+        binding.textPaymentStatusBadge.setBackgroundResource(bgRes);
+        binding.textPaymentStatusBadge.setTextColor(ContextCompat.getColor(this, colorRes));
     }
 
     @Override

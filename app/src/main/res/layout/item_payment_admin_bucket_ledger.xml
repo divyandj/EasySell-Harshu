@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/surface"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@color/border"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/textSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/textMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="@color/text_tertiary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/textHealth"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="Health: -"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/progressHealth"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="4dp"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0"
+            android:progressTint="@color/info"
+            android:progressBackgroundTint="@color/gray_200" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/buttonEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/buttonAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Action"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -13,12 +13,18 @@ import com.easysell.databinding.ActivitySignUpBinding;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
 
     private static final String TAG = "SignUpActivity";
     private ActivitySignUpBinding binding;
     private FirebaseAuth firebaseAuth;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,6 +33,7 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         firebaseAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
 
         binding.btnSignUp.setOnClickListener(v -> createAccount());
         binding.tvLogin.setOnClickListener(v -> finish());
@@ -79,10 +86,28 @@ public class SignUpActivity extends AppCompatActivity {
                                 .setDisplayName(name)
                                 .build();
                         user.updateProfile(profileUpdates).addOnCompleteListener(task -> {
-                            setLoading(false);
-                            Toast.makeText(SignUpActivity.this, "Account created successfully.", Toast.LENGTH_SHORT)
+                            Map<String, Object> initialProfile = new HashMap<>();
+                            initialProfile.put("userType", "seller");
+                            initialProfile.put("storeHandle", "");
+                            initialProfile.put("ownerName", name);
+
+                            firestore.collection("users")
+                                .document(user.getUid())
+                                .set(initialProfile, SetOptions.merge())
+                                .addOnSuccessListener(unused -> {
+                                setLoading(false);
+                                Toast.makeText(SignUpActivity.this, "Account created successfully.", Toast.LENGTH_SHORT)
                                     .show();
-                            navigateToHome();
+                                navigateToHome();
+                                })
+                                .addOnFailureListener(e -> {
+                                setLoading(false);
+                                Log.e(TAG, "Profile initialization failed", e);
+                                Toast.makeText(SignUpActivity.this,
+                                    "Account created, but profile setup failed. Please edit profile once.",
+                                    Toast.LENGTH_LONG).show();
+                                navigateToHome();
+                                });
                         });
                     }
                 })
