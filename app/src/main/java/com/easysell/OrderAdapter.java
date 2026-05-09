@@ -69,6 +69,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         TextView customerNameText;
         TextView orderTotalText;
         TextView orderStatusChip; // Changed from Chip to TextView for custom background support
+        TextView paymentStatusChip;
 
         public OrderViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -78,6 +79,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             customerNameText = itemView.findViewById(R.id.customer_name_text);
             orderTotalText = itemView.findViewById(R.id.order_total_text);
             orderStatusChip = itemView.findViewById(R.id.order_status_chip);
+            paymentStatusChip = itemView.findViewById(R.id.payment_status_chip);
         }
 
         public void bind(final Order order, final OnOrderClickListener listener, FirebaseFirestore db, SimpleDateFormat dateFormat) {
@@ -138,11 +140,60 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             orderStatusChip.setBackgroundResource(bgRes);
             orderStatusChip.setTextColor(ContextCompat.getColor(context, textColorRes));
 
-            // 5. Fetch Customer Name
+            // 5. Set Payment Status Chip
+            String paymentStatus = order.getResolvedPaymentStatus();
+            paymentStatusChip.setText(formatPaymentStatusLabel(paymentStatus));
+            applyPaymentStatusChip(context, paymentStatusChip, paymentStatus);
+
+            // 6. Fetch Customer Name
             fetchCustomerName(order.getUserId(), db);
 
-            // 6. Click Listener
+            // 7. Click Listener
             itemView.setOnClickListener(v -> listener.onOrderClick(order));
+        }
+
+        private String formatPaymentStatusLabel(String status) {
+            if (status == null || status.trim().isEmpty()) {
+                return "PAYMENT N/A";
+            }
+            return status.trim().toUpperCase(Locale.ROOT).replace('_', ' ');
+        }
+
+        private void applyPaymentStatusChip(Context context, TextView chip, String status) {
+            int bgRes = R.drawable.bg_chip_gray;
+            int textColorRes = R.color.text_secondary;
+
+            String normalized = status != null ? status.trim().toUpperCase(Locale.ROOT) : "";
+            switch (normalized) {
+                case "PENDING":
+                case "UTR_SUBMITTED":
+                case "PAYMENT_UNDER_REVIEW":
+                    bgRes = R.drawable.bg_chip_orange;
+                    textColorRes = R.color.warning;
+                    break;
+                case "RECONCILED":
+                    bgRes = R.drawable.bg_chip_green;
+                    textColorRes = R.color.success;
+                    break;
+                case "DISPUTED":
+                    bgRes = R.drawable.bg_chip_red;
+                    textColorRes = R.color.error;
+                    break;
+                case "EXPIRED":
+                case "CANCELLED_BY_BUYER":
+                    bgRes = R.drawable.bg_chip_gray;
+                    textColorRes = R.color.text_secondary;
+                    break;
+                default:
+                    if (!normalized.isEmpty()) {
+                        bgRes = R.drawable.bg_chip_blue;
+                        textColorRes = R.color.info;
+                    }
+                    break;
+            }
+
+            chip.setBackgroundResource(bgRes);
+            chip.setTextColor(ContextCompat.getColor(context, textColorRes));
         }
 
         private void fetchCustomerName(String userId, FirebaseFirestore db) {

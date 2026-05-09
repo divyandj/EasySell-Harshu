@@ -278,6 +278,7 @@ public class EditProfileActivity extends AppCompatActivity {
         data.put("contactPhone", binding.etContactPhone.getText().toString().trim());
         data.put("contactWhatsapp", binding.etContactWhatsapp.getText().toString().trim());
         data.put("contactAddress", binding.etContactAddress.getText().toString().trim());
+        data.put("userType", "seller");
 
         // Save URLs
         if (logoUrl != null)

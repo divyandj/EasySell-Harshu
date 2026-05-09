@@ -202,6 +202,10 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             startActivity(intent);
         });
 
+        binding.paymentAdminCard.setOnClickListener(view -> {
+            openPaymentAdmin();
+        });
+
         binding.rewardClaimsCard.setOnClickListener(view -> {
             Intent intent = new Intent(HomeActivity.this, RewardClaimRequestsActivity.class);
             startActivity(intent);
@@ -215,9 +219,20 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         binding.logoutIcon.setOnClickListener(view -> showSignOutConfirmationDialog());
         binding.previewIcon.setOnClickListener(view -> openStorefrontPreview());
         binding.shareIcon.setOnClickListener(view -> shareStoreUrl());
-        binding.shareStoreBanner.setOnClickListener(view -> shareStoreUrl());
+        binding.shareStoreBanner.setOnClickListener(view -> {
+            view.animate()
+                    .scaleX(0.985f)
+                    .scaleY(0.985f)
+                    .setDuration(90)
+                    .withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(90).start())
+                    .start();
+            shareStoreUrl();
+        });
 
         binding.viewAllText.setOnClickListener(v -> {
+            v.animate().alpha(0.75f).setDuration(70)
+                    .withEndAction(() -> v.animate().alpha(1f).setDuration(70).start())
+                    .start();
             binding.categoriesRecyclerView.smoothScrollToPosition(0);
         });
     }
@@ -340,6 +355,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         catalogueList = new ArrayList<>();
         adapter = new CatalogueAdapter(catalogueList, this);
         binding.categoriesRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        binding.categoriesRecyclerView.setHasFixedSize(true);
         binding.categoriesRecyclerView.setAdapter(adapter);
     }
 
@@ -504,11 +520,25 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_payment_admin) {
+            openPaymentAdmin();
+            return true;
+        }
         if (item.getItemId() == R.id.action_sign_out) {
             signOutAndGoToLogin();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openPaymentAdmin() {
+        if (currentStoreHandle == null || currentStoreHandle.trim().isEmpty()) {
+            Toast.makeText(this, "Set your Store Link Prefix in Profile first.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Intent intent = new Intent(this, PaymentAdminActivity.class);
+        intent.putExtra("STORE_HANDLE", currentStoreHandle.trim().toLowerCase());
+        startActivity(intent);
     }
 
     private void openStorefrontPreview() {

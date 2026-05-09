@@ -109,6 +109,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_marginTop="@dimen/spacing_lg">
 
             <TextView
@@ -119,6 +120,16 @@
                 tools:text="Placed"
                 tools:background="@drawable/bg_chip_blue"
                 tools:textColor="@color/info"/>
+
+            <TextView
+                android:id="@+id/payment_status_chip"
+                style="@style/EasySellStatusChip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_sm"
+                tools:text="PAYMENT PENDING"
+                tools:background="@drawable/bg_chip_orange"
+                tools:textColor="@color/warning"/>
 
         </LinearLayout>
 

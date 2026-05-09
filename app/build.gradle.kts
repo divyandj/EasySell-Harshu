@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     implementation("com.google.firebase:firebase-firestore")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
@@ -62,6 +63,14 @@ dependencies {
     implementation(libs.glide)
     implementation("androidx.multidex:multidex:2.0.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0") // <--- ADD THIS (Make sure version matches your glide version)
+
+    // Networking for admin payment APIs
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
+
+    // QR decode for UPI auto-detection
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
     
     // MPAndroidChart for Analytics
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
