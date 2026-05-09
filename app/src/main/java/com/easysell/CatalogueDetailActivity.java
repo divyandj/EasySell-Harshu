@@ -32,6 +32,7 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
     private String catalogueName;
     private String storeHandle;
     private ListenerRegistration productListener;
+    private android.content.SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +63,8 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
 
         db = FirebaseFirestore.getInstance();
         setupRecyclerView();
+
+        prefs = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
 
         // --- BUTTON LISTENERS ---
 
@@ -145,7 +148,15 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
             return;
         }
 
-        String deepLink = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
+        // Determine whether to use custom domain (if owner prefers it)
+        String customDomain = prefs.getString("customDomain", "");
+        boolean preferCustom = prefs.getBoolean("prefer_custom_domain", false);
+        String deepLink;
+        if (preferCustom && customDomain != null && !customDomain.isEmpty()) {
+            deepLink = "https://" + customDomain + "/catalogue/" + catalogueId;
+        } else {
+            deepLink = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
+        }
         String messageBody = String.format(
                 "Check out my catalogue \"%s\" on Easy Sell!\n\nBrowse my products here:\n%s",
                 catalogueName != null ? catalogueName : "My Store",
@@ -173,8 +184,15 @@ public class CatalogueDetailActivity extends AppCompatActivity implements Produc
             return;
         }
 
-        // The URL to open
-        String url = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
+        // The URL to open (respect custom domain preference)
+        String customDomain = prefs.getString("customDomain", "");
+        boolean preferCustom = prefs.getBoolean("prefer_custom_domain", false);
+        String url;
+        if (preferCustom && customDomain != null && !customDomain.isEmpty()) {
+            url = "https://" + customDomain + "/catalogue/" + catalogueId;
+        } else {
+            url = "https://" + storeHandle + ".store.bydj.dev/catalogue/" + catalogueId;
+        }
 
         try {
             // Create an Intent to view the URL

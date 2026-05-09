@@ -47,6 +47,7 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
     private FirebaseUser currentAccount; // Store the account info
     private String currentStoreHandle = "";
+    private android.content.SharedPreferences prefs;
 
     // --- 1. PERMISSION LAUNCHER ---
     private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
@@ -79,6 +80,8 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
         // --- 2. SETUP NOTIFICATIONS ---
         askNotificationPermission();
 
+        // Preferences (for custom domain sharing preference)
+        prefs = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
         // --- CLICK LISTENERS ---
         setupClickListeners();
 
@@ -242,7 +245,15 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
             Toast.makeText(this, "Store handle not configured. Set it in Profile settings.", Toast.LENGTH_SHORT).show();
             return;
         }
-        String url = "https://" + currentStoreHandle + ".store.bydj.dev";
+        // Decide whether to use custom domain if available and preferred
+        String customDomain = prefs.getString("customDomain", "");
+        boolean preferCustom = prefs.getBoolean("prefer_custom_domain", false);
+        String url;
+        if (preferCustom && customDomain != null && !customDomain.isEmpty()) {
+            url = "https://" + customDomain;
+        } else {
+            url = "https://" + currentStoreHandle + ".store.bydj.dev";
+        }
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Check out my store!");
@@ -282,8 +293,17 @@ public class HomeActivity extends AppCompatActivity implements CatalogueAdapter.
 
                         // 3. Get Store Handle
                         String handle = document.getString("storeHandle");
+                        String customDomain = document.getString("customDomain");
                         if (handle != null && !handle.isEmpty()) {
                             currentStoreHandle = handle;
+                            // Persist custom domain (if any) for sharing decisions
+                            if (customDomain != null && !customDomain.isEmpty()) {
+                                prefs.edit().putString("customDomain", customDomain).apply();
+                                // If preference not set yet, default to preferring custom domain
+                                if (!prefs.contains("prefer_custom_domain")) {
+                                    prefs.edit().putBoolean("prefer_custom_domain", true).apply();
+                                }
+                            }
                             binding.shareStoreUrl.setText(handle + ".store.bydj.dev");
                         } else {
                             currentStoreHandle = "";

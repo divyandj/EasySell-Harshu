@@ -117,6 +117,16 @@ public class ProfileActivity extends AppCompatActivity {
             binding.tvStoreHandleHeader.setVisibility(View.GONE);
         }
 
+        // Persist customDomain if present and set default preference
+        String customDomain = doc.getString("customDomain");
+        if (customDomain != null && !customDomain.isEmpty()) {
+            if (prefs == null) prefs = getSharedPreferences("AdminPrefs", MODE_PRIVATE);
+            prefs.edit().putString("customDomain", customDomain).apply();
+            if (!prefs.contains("prefer_custom_domain")) {
+                prefs.edit().putBoolean("prefer_custom_domain", true).apply();
+            }
+        }
+
         binding.tvBusinessNameHeader
                 .setText(businessName != null && !businessName.isEmpty() ? businessName : "Business Name");
         binding.tvOwnerNameHeader.setText(ownerName != null && !ownerName.isEmpty() ? ownerName : "Owner Name");
