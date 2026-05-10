@@ -220,6 +220,20 @@ public class PaymentAdminRepository {
         });
     }
 
+    public void unresolveOrder(String orderId, ResultCallback<ReopenResult> callback) {
+        withAdminToken(new TokenCallback() {
+            @Override
+            public void onToken(String authHeader) {
+                enqueue(api.unresolveReconciledOrder(authHeader, orderId, new Object()), callback);
+            }
+
+            @Override
+            public void onError(String message, String code) {
+                callback.onError(message, code);
+            }
+        });
+    }
+
     public void listBuckets(String storeHandle, ResultCallback<List<BucketDto>> callback) {
         withAdminToken(new TokenCallback() {
             @Override

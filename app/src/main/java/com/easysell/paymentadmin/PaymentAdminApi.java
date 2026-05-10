@@ -38,6 +38,13 @@ public interface PaymentAdminApi {
             @Body Object emptyBody
     );
 
+    @POST("api/admin/payment/orders/{orderId}/unresolve")
+    Call<ApiEnvelope<ReopenResult>> unresolveReconciledOrder(
+            @Header("Authorization") String auth,
+            @Path("orderId") String orderId,
+            @Body Object emptyBody
+    );
+
     @GET("api/admin/payment/orders/pending")
     Call<ApiEnvelope<CursorPage<PaymentOrderItem>>> listPendingOrders(
             @Header("Authorization") String auth,

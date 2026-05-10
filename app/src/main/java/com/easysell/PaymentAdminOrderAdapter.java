@@ -27,6 +27,8 @@ public class PaymentAdminOrderAdapter extends RecyclerView.Adapter<PaymentAdminO
         void onDispute(PaymentOrderItem item);
 
         void onReopen(PaymentOrderItem item);
+
+        void onUnresolve(PaymentOrderItem item);
     }
 
     private final List<PaymentOrderItem> items = new ArrayList<>();
@@ -75,15 +77,18 @@ public class PaymentAdminOrderAdapter extends RecyclerView.Adapter<PaymentAdminO
 
         boolean canConfirm = "UTR_SUBMITTED".equals(status) || "PAYMENT_UNDER_REVIEW".equals(status);
         boolean canReopen = "DISPUTED".equals(status);
+        boolean canUnresolve = "RECONCILED".equals(status);
 
         h.buttonReconcile.setVisibility(canConfirm ? View.VISIBLE : View.GONE);
         h.buttonDispute.setVisibility(canConfirm ? View.VISIBLE : View.GONE);
         h.buttonReopen.setVisibility(canReopen ? View.VISIBLE : View.GONE);
-        h.layoutActions.setVisibility((canConfirm || canReopen) ? View.VISIBLE : View.GONE);
+        h.buttonUnresolve.setVisibility(canUnresolve ? View.VISIBLE : View.GONE);
+        h.layoutActions.setVisibility((canConfirm || canReopen || canUnresolve) ? View.VISIBLE : View.GONE);
 
         h.buttonReconcile.setOnClickListener(v -> listener.onReconcile(item));
         h.buttonDispute.setOnClickListener(v -> listener.onDispute(item));
         h.buttonReopen.setOnClickListener(v -> listener.onReopen(item));
+        h.buttonUnresolve.setOnClickListener(v -> listener.onUnresolve(item));
     }
 
     @Override
@@ -143,6 +148,7 @@ public class PaymentAdminOrderAdapter extends RecyclerView.Adapter<PaymentAdminO
         Button buttonReconcile;
         Button buttonDispute;
         Button buttonReopen;
+        Button buttonUnresolve;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -155,6 +161,7 @@ public class PaymentAdminOrderAdapter extends RecyclerView.Adapter<PaymentAdminO
             buttonReconcile = itemView.findViewById(R.id.buttonReconcile);
             buttonDispute = itemView.findViewById(R.id.buttonDispute);
             buttonReopen = itemView.findViewById(R.id.buttonReopen);
+            buttonUnresolve = itemView.findViewById(R.id.buttonUnresolve);
         }
     }
 }

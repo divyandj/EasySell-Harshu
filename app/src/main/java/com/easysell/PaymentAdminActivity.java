@@ -1481,6 +1481,26 @@ public class PaymentAdminActivity extends AppCompatActivity implements PaymentAd
         });
     }
 
+    @Override
+    public void onUnresolve(PaymentOrderItem item) {
+        if (item == null || item.orderId == null) return;
+        binding.progressBar.setVisibility(View.VISIBLE);
+        repository.unresolveOrder(item.orderId, new PaymentAdminRepository.ResultCallback<ReopenResult>() {
+            @Override
+            public void onSuccess(ReopenResult data) {
+                binding.progressBar.setVisibility(View.GONE);
+                Toast.makeText(PaymentAdminActivity.this, "Order moved back to review", Toast.LENGTH_SHORT).show();
+                loadInitial();
+            }
+
+            @Override
+            public void onError(String message, String code) {
+                binding.progressBar.setVisibility(View.GONE);
+                handleApiError(code, message);
+            }
+        });
+    }
+
     private void confirm(PaymentOrderItem item, String action) {
         if (item == null || item.orderId == null) return;
         binding.progressBar.setVisibility(View.VISIBLE);
@@ -1527,8 +1547,17 @@ public class PaymentAdminActivity extends AppCompatActivity implements PaymentAd
         if ("ORDER_NOT_CONFIRMABLE".equals(code)) {
             return "Order is not in a confirmable state.";
         }
+        if ("ORDER_NOT_RECONCILED".equals(code)) {
+            return "Only reconciled orders can be moved back to review.";
+        }
         if ("ORDER_EXPIRED".equals(code)) {
             return "Order has expired and cannot be processed.";
+        }
+        if ("INSUFFICIENT_BUCKET_BALANCE".equals(code)) {
+            return "Unable to rollback this order because bucket totals are out of sync.";
+        }
+        if ("SUFFIX_RESERVATION_CONFLICT".equals(code)) {
+            return "This payment suffix is already reserved by another order. Please check recent payments.";
         }
         if ("VENDOR_ACTIVE_BUCKET_EXISTS".equals(code)) {
             return "An active collection account already exists for this payment handle.";
